@@ -1,7 +1,5 @@
-# This .gitignore file should be placed at the root of your Unity project directory
-#
-# Get latest from https://github.com/github/gitignore/blob/master/Unity.gitignore
-#
+# I've copied this .gitignore file from a Unity project, so don't be surprised if you come across some seemingly irrelevant file extensions in this context."
+
 /[Ll]ibrary/
 /[Tt]emp/
 /[Oo]bj/
