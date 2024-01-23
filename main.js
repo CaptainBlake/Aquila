@@ -27,51 +27,90 @@ Happy coding and conquering the Screeps world with Aquila!
 ===============================================================================
 */
 
-// controllers
 const spawnController = require('spawn_controller');
-// modules
-const constants = require('constants');
-// roles
-const roleHarvester = require('role_harvester');
-const roleBuilder = require('role_builder');
-const roleDefender = require('role_defender');
+const constants = require('./constants');
+const Harvester = require('role_harvester');
+const Builder = require('role_builder');
+const Defender = require('role_defender');
+const Upgrader = require('role_upgrader');
+const Repairer = require('role_repairer');
+const Carrier = require('role_carrier');
+const Miner = require('role_miner');
+const Scout = require('role_scout');
+const Claimer = require('role_claimer');
 
 module.exports.loop = function () {
 
     // iterate through all spawns
     for (const spawnName in Game.spawns) {
         const spawn = Game.spawns[spawnName];
-        //Add a harvester to the spawn queue with high priority (harvesters are critical to colony survival)
-        spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_HARVESTER, constants.SPAWN_QUEUE_HIGH_PRIORITY);
-        //Add a builder to the spawn queue with medium priority (builders are important but not critical to colony survival)
-        spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_BUILDER, constants.SPAWN_QUEUE_MEDIUM_PRIORITY);
-        //Add a defender to the spawn queue with low priority (defenders are not critical to colony survival)
-        spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_DEFENDER, constants.SPAWN_QUEUE_LOW_PRIORITY);
+
+        // Check if the spawn queue is full before adding more creeps
+        if (!spawnController.isSpawnQueueFull(spawn)) {
+            // Dynamically determine the priority of each role
+            const priorities = determinePriorities(spawn);
+
+            // Add creeps to the spawn queue with appropriate priorities
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_HARVESTER, priorities.harvester);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_BUILDER, priorities.builder);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_DEFENDER, priorities.defender);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_UPGRADER, priorities.upgrader);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_REPAIRER, priorities.repairer);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_CARRIER, priorities.carrier);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_MINER, priorities.miner);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_SCOUT, priorities.scout);
+            spawnController.addToSpawnQueue(spawn, constants.CREEP_ROLE_CLAIMER, priorities.claimer);
+        }
     }
-    
-    
+
     // process spawn queue for a given spawn
     spawnController.processSpawnQueue(Game.spawns['Spawn1']);
-    
+
     //remove dead creeps from memory
     for (const name in Memory.creeps) {
         if (!Game.creeps[name]) {
             delete Memory.creeps[name];
         }
     }
-    
+
     // iterate through all creeps and execute their roles
     for (const name in Game.creeps) {
         const creep = Game.creeps[name];
-        if (creep.memory.role === constants.CREEP_ROLE_BUILDER) {
-            roleBuilder.run(creep);
-        }
         if (creep.memory.role === constants.CREEP_ROLE_HARVESTER) {
-            roleHarvester.run(creep);
+            const harvester = new Harvester(creep);
+            harvester.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_BUILDER) {
+            const builder = new Builder(creep);
+            builder.run();
         }
         if (creep.memory.role === constants.CREEP_ROLE_DEFENDER) {
-            roleDefender.run(creep);
+            const defender = new Defender(creep);
+            defender.run();
         }
-        // Add logic for other creep roles as needed
+        if (creep.memory.role === constants.CREEP_ROLE_UPGRADER) {
+            const upgrader = new Upgrader(creep);
+            upgrader.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_REPAIRER) {
+            const repairer = new Repairer(creep);
+            repairer.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_CARRIER) {
+            const carrier = new Carrier(creep);
+            carrier.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_MINER) {
+            const miner = new Miner(creep);
+            miner.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_SCOUT) {
+            const scout = new Scout(creep);
+            scout.run();
+        }
+        if (creep.memory.role === constants.CREEP_ROLE_CLAIMER) {
+            const claimer = new Claimer(creep);
+            claimer.run();
+        }
     }
 };
