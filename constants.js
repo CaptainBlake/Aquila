@@ -11,6 +11,17 @@ const CREEP_ROLE_MINER = 'miner';  // Creeps that mine energy from a source
 const CREEP_ROLE_SCOUT = 'scout';  // Creeps that scout out new rooms
 const CREEP_ROLE_CLAIMER = 'claimer';  // Creeps that claim new rooms
 
+// Minimum number of creeps per role per room 
+const MINIMUM_HARVESTERS = 2;
+const MINIMUM_BUILDERS = 2;
+const MINIMUM_DEFENDERS = 1;
+const MINIMUM_UPGRADERS = 2;
+const MINIMUM_REPAIRERS = 1;
+const MINIMUM_CARRIERS = 1;
+const MINIMUM_MINERS = 1;
+const MINIMUM_SCOUTS = 0;
+const MINIMUM_CLAIMERS = 0;
+
 // Spawn queue priorities (lower number = higher priority)
 const SPAWN_QUEUE_EMERGENCY_PRIORITY = 0;   // Player-defined emergency creeps
 const SPAWN_QUEUE_CRITICAL_PRIORITY = 1;   // Creeps that are critical to colony survival
@@ -18,6 +29,11 @@ const SPAWN_QUEUE_HIGH_PRIORITY = 2;   // Creeps that are critical to colony sur
 const SPAWN_QUEUE_MEDIUM_PRIORITY = 3   // Creeps that are important but not critical   
 const SPAWN_QUEUE_LOW_PRIORITY = 4;   // Creeps that are not critical or important
 const SPAWN_QUEUE_NO_PRIORITY = 5;   // Creeps that are not critical or important
+
+// Energy thresholds
+const ENERGY_THRESHOLD_TIER_1 = 300;
+const ENERGY_THRESHOLD_TIER_2 = 500;
+const ENERGY_THRESHOLD_TIER_3 = 800;
 
 // Pathfinding constants
 const PATHFINDING_PLAIN_COST = 2;
@@ -34,12 +50,28 @@ const constants = {
     CREEP_ROLE_MINER,
     CREEP_ROLE_SCOUT,
     CREEP_ROLE_CLAIMER,
+    
+    MINIMUM_HARVESTERS,
+    MINIMUM_BUILDERS,
+    MINIMUM_DEFENDERS,
+    MINIMUM_UPGRADERS,
+    MINIMUM_REPAIRERS,
+    MINIMUM_CARRIERS,
+    MINIMUM_MINERS,
+    MINIMUM_SCOUTS,
+    MINIMUM_CLAIMERS,
+    
     SPAWN_QUEUE_EMERGENCY_PRIORITY,
     SPAWN_QUEUE_CRITICAL_PRIORITY,
     SPAWN_QUEUE_HIGH_PRIORITY,
     SPAWN_QUEUE_MEDIUM_PRIORITY,
     SPAWN_QUEUE_LOW_PRIORITY,
     SPAWN_QUEUE_NO_PRIORITY,
+    
+    ENERGY_THRESHOLD_TIER_1,
+    ENERGY_THRESHOLD_TIER_2,
+    ENERGY_THRESHOLD_TIER_3,
+    
     PATHFINDING_PLAIN_COST,
     PATHFINDING_SWAMP_COST,
 };
