@@ -32,9 +32,10 @@ const globalGameStateController = require('global_game_state_controller');
 const populationController = require('./population_controller');
 
 // initialize singleton controllers
-globalGameStateController.initialize();
+
 
 module.exports.loop = function () {
+    // initialize controllers
     // update game state
     globalGameStateController.taskLoop();
     // process population controller

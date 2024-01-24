@@ -6,162 +6,135 @@ const SpawnController = require('./spawn_controller');
 const constants = require('./constants');
 
 class PopulationController {
+    
     constructor() {
         this.spawnControllers = [];
+        this.globalPopulationMap = new Map();
     }
 
+    
     /**
      * Task loop for the population controller.
      * This method is used to manage the population of creeps in the game.
      */
     taskLoop() {
-        // check for new spawns
-        this.checkForNewSpawns();
-        // check spawn status
-        this.checkSpawn();
+        // create spawn controllers
+        this.initialize()
+        if(this.spawnControllers.length === 0){return;}
         // check global population
-        this.checkGlobalPopulation();
+        const globalPopulationMap = this.getGlobalPopulationMap();
         // manage population
-        this.managePopulation();
+        this.setRecruitingPlans(globalPopulationMap);
         // process spawn queues
         this.processSpawnQueues();
         // run creeps
         this.executeCreepRoles();
     }
 
-    checkForNewSpawns() {
-        // get all spawns in the game
-        const spawns = Game.spawns;
-        //print out a list into console (map)
-        for(let spawnName in spawns){
-            console.log("spawn:" + spawnName);
-        }
-
-        // loop through each spawn in the game
-        for (let spawnName in spawns) {
-            // check if a SpawnController already exists for the spawn
-            if (!this.spawnControllers[spawnName]) {
-                // create a new SpawnController for the spawn
-                // add the SpawnController to the spawnControllers array
-                this.spawnControllers[spawnName] = new SpawnController(spawns[spawnName]);
-            }
-        }
-    }
-    
     /**
-     * Check if the spawn is still alive.
+     * Initializes the population controller.
+     *  - Creates a SpawnController for each spawn in the game.
      */
-    checkSpawn() {
-        for (let spawnName in this.spawnControllers) {
-            if (!Game.spawns[spawnName]) {
-                delete this.spawnControllers[spawnName];
-            }
-        }
-    }
-    
-    /**
-     * Checks the population of all spawns in the game.
-     * This method should be called at the beginning of each tick.
-     */
-    checkGlobalPopulation() {
-        // check if array is empty
-        for (let spawnName in this.spawnControllers) {
-            this.spawnControllers[spawnName].checkLocalPopulation();
+    initialize() {
+        // get all spawns in the game, create a SpawnController for each one, and add it to the spawnControllers array
+        for (let spawnName in Game.spawns) {
+            let spawn = Game.spawns[spawnName];
+            console.log("creating spawn controller for " + spawnName + "...");
+            this.spawnControllers.push(new SpawnController(spawn));
         }
     }
 
     /**
-     * this is a big one!
-     * Manages the population of creeps in the game.
-     * This method should be called after the population has been checked.
-     * it adds creeps to the spawn queue if the population is below the desired amount.
-     * Currently, the desired population is hard-coded in the constants file.
-     * TODO: make the desired population dynamic based on the game state.
+     * Checks the global population of creeps in the game.
+     * @returns {Map<any, any>} - A map of the global population of creeps in the game by role.
      */
-    managePopulation() {
-        const roleCounts = {
-            [constants.CREEP_ROLE_HARVESTER]: constants.MINIMUM_HARVESTERS,
-            [constants.CREEP_ROLE_BUILDER]: constants.MINIMUM_BUILDERS,
-            [constants.CREEP_ROLE_DEFENDER]: constants.MINIMUM_DEFENDERS,
-            [constants.CREEP_ROLE_UPGRADER]: constants.MINIMUM_UPGRADERS,
-            [constants.CREEP_ROLE_REPAIRER]: constants.MINIMUM_REPAIRERS,
-            [constants.CREEP_ROLE_CARRIER]: constants.MINIMUM_CARRIERS,
-            [constants.CREEP_ROLE_MINER]: constants.MINIMUM_MINERS,
-            [constants.CREEP_ROLE_SCOUT]: constants.MINIMUM_SCOUTS,
-            [constants.CREEP_ROLE_CLAIMER]: constants.MINIMUM_CLAIMERS,
-        };
-
+    getGlobalPopulationMap() {
         for (let spawnController of this.spawnControllers) {
-            // check if spawnController is defined
             if (spawnController) {
-                const currentPopulation = spawnController.getLocalPopulation();
-
-                for (let role in roleCounts) {
-                    const desiredCount = roleCounts[role];
-                    const currentCount = currentPopulation[role] || 0;
-
-                    if (currentCount < desiredCount) {
-                        spawnController.addToSpawnQueue(role);
-                        console.log(`Added ${role} to spawn queue`)
+                // Retrieve the local population table from the spawn controller
+                let localPopulationTable = spawnController.getLocalPopulationTable();
+                // Check if localPopulationTable is an instance of Map
+                if (localPopulationTable instanceof Map) {
+                    if (localPopulationTable.size === 0) {
+                        console.log('localPopulationTable is empty');
+                    } else {
+                        // Add the local population table to the roomPopulationMap
+                        this.globalPopulationMap.set(spawnController.name, Array.from(localPopulationTable.entries()));
                     }
+                } else {
+                    console.log('localPopulationTable is not a Map object');
                 }
             }
         }
+        // serialize the global population map and store it in memory
+        Memory.global_population = Array.from(this.globalPopulationMap.entries());
     }
-    
+
+    /**
+     * Sets the recruiting plan for each spawn in the game.
+     * Uses the global population map to determine the recruiting plan for each spawn in the game.
+     * Uses constants to determine the minimum number of creeps per role per room.
+     */
+    setRecruitingPlans() {
+        for (let spawnController of this.spawnControllers) {
+            // Retrieve the localPopulationTable from the globalPopulationMap
+            let localPopulationTable = new Map(this.globalPopulationMap.get(spawnController.name));
+            // get the spawnQueue from the spawn controller
+            let spawnQueue = spawnController.spawnQueue;
+            // iterate through the minimum roles map and add roles to the spawn queue
+            // if the local population is below the minimum for that role
+            // and the spawn queue does not already contain that role (to avoid duplicates)
+            for (let role in constants.MINIMUM_ROLES_MAP) {
+                const desiredCount = constants.MINIMUM_ROLES_MAP[role];
+                const currentCount = localPopulationTable.get(role) || 0;
+                const queueCount = spawnQueue.filter(queuedRole => queuedRole.item === role).items.length;
+                //console log for debugging
+                console.log(`${role},= : ${currentCount}, | Q: ${queueCount}, | MIN: ${desiredCount}`);
+                if (currentCount + queueCount < desiredCount) {
+                    //console.log(`adding ${role} to spawn queue for ${spawnController.name}...`)
+                    
+                    //TODO: ======================>>>> FIX ME
+                    
+                    //determine priority based on role, energy, and current population gap between desired and actual
+                    let priority = constants.SPAWN_QUEUE_NO_PRIORITY;
+                    
+                    //TODO: ======================>>>> FIX ME
+                    
+                    spawnQueue.enqueue({ role: constants.CREEP_ROLE_HARVESTER }, priority);
+                }
+            }
+            // Update the spawn controller's memory
+            spawnController.updateSpawnQueue(spawnQueue);
+        }
+    }
+
     /**
      * Processes the spawn queue for all spawns in the game.
+     * Iterates over the spawnControllers array and calls the processSpawnQueue method for each spawnController.
+     * Checks if the spawnController is not null before calling the processSpawnQueue method to prevent a null pointer exception.
      */
     processSpawnQueues() {
+        // Iterate over the spawnControllers array
         for (let spawnController of this.spawnControllers) {
+            // Check if the spawnController is not null
             if(spawnController){
+                // Call the processSpawnQueue method for the spawnController
                 spawnController.processSpawnQueue();
-            }else{
-                console.log('spawnController is undefined' + spawnController);
             }
         }
     }
-    
+
     /**
      * Executes the creep roles for all spawns in the game.
      * This method should be called after the spawn queues have been processed.
      */
     executeCreepRoles() {
-        for (let spawnName in this.spawnControllers) {
-            if(spawnName){
-                this.spawnControllers[spawnName].runLocalCreeps();
-            }
+        // Iterate over the spawnControllers array
+        for (let spawnController of this.spawnControllers) {
+            // Call the runLocalCreeps method for the spawnController
+            spawnController.runLocalCreeps();
         }
     }
-
-    /**
-     * Returns the total number of creeps with the given role
-     * @param role - the role to count
-     * @returns {number} - the number of creeps with the given role in the game
-     */
-    getNumberOfCreeps(role) {
-        // get all creeps in the game
-        let creeps = Game.creeps;
-        // initialize counter
-        let count = 0;
-        // loop through creeps
-        for (let creepName in creeps) {
-            // check if creep has the given role
-            if (creeps[creepName].memory.role === role) {
-                // increment counter
-                count++;
-            }
-        }
-    }
-
-    /**
-     * Adds a spawn controller to the population controller.
-     * @param spawnController - the spawn controller to add
-     */
-    addSpawnController(spawnController) {
-        this.spawnControllers[spawnController.local_spawn.name] = spawnController;
-    }
-    
 }
 
 // initialize singleton controller instance and export it
