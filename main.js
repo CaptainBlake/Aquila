@@ -28,19 +28,21 @@ Happy coding and conquering the Screeps world with Aquila!
 */
 
 // Controller
-const gameStateController = require('game_state_controller');
+const globalGameStateController = require('global_game_state_controller');
 const populationController = require('./population_controller');
 
-// Classes
-const GlobalGameStateController = new gameStateController();
-const GlobalPopulationController = new populationController();
+// initialize singleton controllers
+globalGameStateController.initialize();
+populationController.initialize();
 
 
 module.exports.loop = function () {
-    console.log("Tick" + Game.time + "---------------------------------");
-    // update global game state
-    GlobalGameStateController.updateGameState();
-    // perform global population control
-    GlobalPopulationController.loop();
+    // update game state
+    globalGameStateController.taskLoop();
+    // process population controller
+    populationController.taskLoop();
+    
+    
+    
     
 };

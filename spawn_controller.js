@@ -24,9 +24,9 @@ const Claimer = require("./role_claimer");
  * The spawn queue is implemented using the PriorityQueue class.
  */
 class SpawnController {
-    constructor() {
-        this.local_spawn = null;
-        this.spawnQueue = null;
+    constructor(spawn = null) {
+        this.local_spawns = [spawn, null, null];
+        this.spawnQueue = [];
         this.local_creeps = [];
         this.current_harvesters = 0;
         this.current_builders = 0;
@@ -39,14 +39,22 @@ class SpawnController {
         this.current_claimers = 0;
     }
 
-    initializeSpawnController(spawn) {
-        this.local_spawn = spawn;
-        if (!this.local_spawn.memory.spawnQueue) {
-            this.local_spawn.memory.spawnQueue = [];
-        }
-        this.spawnQueue = new PriorityQueue(this.local_spawn.memory.spawnQueue);
+    /**
+     * Initializes the spawn queue for the spawn.
+     */
+    initializeSpawnQueue() {
+        this.local_spawns.forEach((spawn, index) => {
+            if(!spawn) return;
+            if (!spawn.memory.spawnQueue) {
+                spawn.memory.spawnQueue = [];
+            }
+            this.spawnQueue[index] = new PriorityQueue(spawn.memory.spawnQueue);
+        });
     }
 
+    /**
+     * Checks the population of the room.
+     */
     checkLocalPopulation() {
         for (let i = 0; i < this.local_creeps.length; i++) {
             if (!Game.creeps[this.local_creeps[i].name]) {
@@ -67,8 +75,42 @@ class SpawnController {
             this.current_scouts = this.local_creeps.filter(creep => creep.memory && creep.memory.role === constants.CREEP_ROLE_SCOUT).length;
             this.current_claimers = this.local_creeps.filter(creep => creep.memory && creep.memory.role === constants.CREEP_ROLE_CLAIMER).length;
         }
+        console.log(
+            "total harvesters: " + this.current_harvesters + "\n" + 
+            "total builders: " + this.current_builders + "\n" +
+            "total defenders: " + this.current_defenders + "\n" +
+            "total upgraders: " + this.current_upgraders + "\n" +
+            "total repairers: " + this.current_repairers + "\n" +
+            "total carriers: " + this.current_carriers + "\n" +
+            "total miners: " + this.current_miners + "\n" +
+            "total scouts: " + this.current_scouts + "\n" +
+            "total claimers: " + this.current_claimers + "\n" +
+            "total creeps: " + this.local_creeps.length + "\n");
     }
 
+    /**
+     * Returns a map of the current population of the room.
+     * @returns {Map<any, any>} - a map of the current population of the room
+     */
+    getLocalPopulation() {
+        let roomPopulation = new Map();
+
+        roomPopulation.set(constants.CREEP_ROLE_HARVESTER, this.current_harvesters);
+        roomPopulation.set(constants.CREEP_ROLE_BUILDER, this.current_builders);
+        roomPopulation.set(constants.CREEP_ROLE_DEFENDER, this.current_defenders);
+        roomPopulation.set(constants.CREEP_ROLE_UPGRADER, this.current_upgraders);
+        roomPopulation.set(constants.CREEP_ROLE_REPAIRER, this.current_repairers);
+        roomPopulation.set(constants.CREEP_ROLE_CARRIER, this.current_carriers);
+        roomPopulation.set(constants.CREEP_ROLE_MINER, this.current_miners);
+        roomPopulation.set(constants.CREEP_ROLE_SCOUT, this.current_scouts);
+        roomPopulation.set(constants.CREEP_ROLE_CLAIMER, this.current_claimers);
+
+        return roomPopulation;
+    }
+
+    /**
+     * Runs the creep roles for the room.
+     */
     runLocalCreeps() {
         this.local_creeps.forEach(creep => {
             let roleInstance;
@@ -116,70 +158,73 @@ class SpawnController {
      * This method should only be called by the PopulationController.
      */
     processSpawnQueue() {
-        while (!this.spawnQueue.isEmpty()) {
-            if (this.local_spawn.spawning) return;
-            if (!this.local_spawn.memory.spawnQueue.isEmpty()) {
-                const highestPriorityElement = this.local_spawn.memory.spawnQueue.dequeue();
+        this.local_spawns.forEach((spawn, index) => {
+            if(!spawn || spawn.spawning) return;
+            while (!this.spawnQueue[index].isEmpty()) {
+                const highestPriorityElement = this.spawnQueue[index].dequeue();
                 this.spawnCreep(highestPriorityElement.item.role, highestPriorityElement.item.priority);
             }
-        }
-        this.local_spawn.memory.spawnQueue = this.spawnQueue.items;
+            spawn.memory.spawnQueue = this.spawnQueue[index].items;
+        });
     }
 
+    /**
+     * Adds a creep to the spawn queue.
+     * @param role - the role of the creep
+     * @param priority - the priority of the creep
+     */
     addToSpawnQueue(role, priority = constants.SPAWN_QUEUE_LOW_PRIORITY) {
-        this.local_spawn.memory.spawnQueue.enqueue({ role }, priority);
+        for (let spawn of this.local_spawns) {
+            if (spawn && !spawn.spawning) {
+                spawn.memory.spawnQueue.enqueue({ role }, priority);
+                return;
+            }
+        }
     }
 
+    /**
+     * Spawns a creep with the given role.
+     * @param role - the role of the creep
+     * @param priority - the priority of the creep
+     */
     spawnCreep(role, priority = constants.SPAWN_QUEUE_LOW_PRIORITY) {
         const body = this.getDynamicBodyParts(role);
 
-        if (!this.local_spawn.spawning) {
-            const result = this.local_spawn.spawnCreep(body, `${role}_${Game.time}`, {
-                memory: { role, priority },
-            });
-
-            if (result === OK) {
-                console.log(`Spawning new creep: ${role}_${Game.time}`);
-                const creep = Game.creeps[`${role}_${Game.time}`];
-                creep.memory.role = role;
-                this.local_creeps.push(creep); // Add the new creep to the local_creeps array
-                // Increment the current count for the given role
-                switch (role) {
-                    case constants.CREEP_ROLE_HARVESTER:
-                        this.current_harvesters++;
-                        break;
-                    case constants.CREEP_ROLE_BUILDER:
-                        this.current_builders++;
-                        break;
-                    case constants.CREEP_ROLE_DEFENDER:
-                        this.current_defenders++;
-                        break;
-                    case constants.CREEP_ROLE_UPGRADER:
-                        this.current_upgraders++;
-                        break;
-                    case constants.CREEP_ROLE_REPAIRER:
-                        this.current_repairers++;
-                        break;
-                    case constants.CREEP_ROLE_CARRIER:
-                        this.current_carriers++;
-                        break;
-                    case constants.CREEP_ROLE_MINER:
-                        this.current_miners++;
-                        break;
-                    case constants.CREEP_ROLE_SCOUT:
-                        this.current_scouts++;
-                        break;
-                    case constants.CREEP_ROLE_CLAIMER:
-                        this.current_claimers++;
-                        break;
+        for (let spawn of this.local_spawns) {
+            if (spawn && !spawn.spawning) {
+                const result = spawn.spawnCreep(body, `${role}_${Game.time}`, {
+                    memory: {
+                        role: role,
+                        state: 'initializing',
+                        target: null,
+                        home: spawn.room.name,
+                        workParts: body.filter(part => part === WORK).length,
+                        priority: priority,
+                        born: Game.time
+                    }
+                });
+                // If the spawn was successful, add the creep to the local_creeps array
+                if (result === OK) {
+                    console.log(`Spawning new creep: ${role}_${Game.time}`);
+                    const creep = Game.creeps[`${role}_${Game.time}`];
+                    creep.memory.role = role;
+                    this.local_creeps.push(creep); // Add the new creep to the local_creeps array
                 }
-            }
-            else{
-                console.log(`Error spawning creep: ${result}`);
+                else{
+                    console.log(`Error spawning creep: ${result}`);
+                }
+                if (result === OK) {
+                    break;
+                }
             }
         }
     }
 
+    /**
+     * Returns the body parts for the given role.
+     * @param role - the role of the creep
+     * @returns {*} - the body parts for the given role
+     */
     getDynamicBodyParts(role) {
         const roleToBodyPartsMethod = {
             [constants.CREEP_ROLE_HARVESTER]: this.getHarvesterBodyParts,
@@ -192,13 +237,11 @@ class SpawnController {
             [constants.CREEP_ROLE_SCOUT]: this.getScoutBodyParts,
             [constants.CREEP_ROLE_CLAIMER]: this.getClaimerBodyParts,
         };
-
         return roleToBodyPartsMethod[role]();
     }
-
-
+    
     getHarvesterBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 200) {
             body.push(WORK);
@@ -210,7 +253,7 @@ class SpawnController {
     }
 
     getBuilderBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 200) {
             body.push(WORK);
@@ -222,7 +265,7 @@ class SpawnController {
     }
 
     getDefenderBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 130) {
             body.push(ATTACK);
@@ -233,7 +276,7 @@ class SpawnController {
     }
 
     getUpgraderBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 200) {
             body.push(WORK);
@@ -245,7 +288,7 @@ class SpawnController {
     }
 
     getRepairerBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 200) {
             body.push(WORK);
@@ -257,7 +300,7 @@ class SpawnController {
     }
 
     getCarrierBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 150) {
             body.push(CARRY);
@@ -269,7 +312,7 @@ class SpawnController {
     }
 
     getMinerBodyParts() {
-        let energyAvailable = this.local_spawn.room.energyAvailable;
+        let energyAvailable = this.local_spawn_1.room.energyAvailable;
         let body = [];
         while (energyAvailable >= 250) {
             body.push(WORK);

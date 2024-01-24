@@ -4,7 +4,7 @@
     }
 
     enqueue(item, priority) {
-        this.items.push({ item, priority });
+        this.items.push({ item, priority }); 
         this.items.sort((a, b) => a.priority - b.priority);
     }
 

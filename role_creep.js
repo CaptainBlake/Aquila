@@ -23,6 +23,16 @@ CreepRole.prototype.performAction = function(action, target) {
 };
 
 /**
+ * updateMemoryAttributes updates the creep's memory attributes with the specified attributes
+ * @param attributes - the attributes to update
+ */
+CreepRole.prototype.updateMemoryAttributes = function(attributes) {
+    for (let key in attributes) {
+        this.creep.memory[key] = attributes[key];
+    }
+};
+
+/**
  * Moves the creep to the target.
  * If a path to the target is already stored in the creep's memory, it follows that path.
  * If not, it calculates a new path, stores it in memory, and moves to the first position on the path.
