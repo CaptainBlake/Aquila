@@ -15,13 +15,13 @@ class PopulationController {
      * This method is used to manage the population of creeps in the game.
      */
     taskLoop() {
-        // check if array is empty
-        if (this.spawnControllers.length === 0) {return;}
-        // check spawn status 
+        // check for new spawns
+        this.checkForNewSpawns();
+        // check spawn status
         this.checkSpawn();
         // check global population
         this.checkGlobalPopulation();
-        // manage population 
+        // manage population
         this.managePopulation();
         // process spawn queues
         this.processSpawnQueues();
@@ -29,6 +29,25 @@ class PopulationController {
         this.executeCreepRoles();
     }
 
+    checkForNewSpawns() {
+        // get all spawns in the game
+        const spawns = Game.spawns;
+        //print out a list into console (map)
+        for(let spawnName in spawns){
+            console.log("spawn:" + spawnName);
+        }
+
+        // loop through each spawn in the game
+        for (let spawnName in spawns) {
+            // check if a SpawnController already exists for the spawn
+            if (!this.spawnControllers[spawnName]) {
+                // create a new SpawnController for the spawn
+                // add the SpawnController to the spawnControllers array
+                this.spawnControllers[spawnName] = new SpawnController(spawns[spawnName]);
+            }
+        }
+    }
+    
     /**
      * Check if the spawn is still alive.
      */
@@ -45,6 +64,7 @@ class PopulationController {
      * This method should be called at the beginning of each tick.
      */
     checkGlobalPopulation() {
+        // check if array is empty
         for (let spawnName in this.spawnControllers) {
             this.spawnControllers[spawnName].checkLocalPopulation();
         }
@@ -72,14 +92,18 @@ class PopulationController {
         };
 
         for (let spawnController of this.spawnControllers) {
-            const currentPopulation = spawnController.getLocalPopulation();
+            // check if spawnController is defined
+            if (spawnController) {
+                const currentPopulation = spawnController.getLocalPopulation();
 
-            for (let role in roleCounts) {
-                const desiredCount = roleCounts[role];
-                const currentCount = currentPopulation[role] || 0;
+                for (let role in roleCounts) {
+                    const desiredCount = roleCounts[role];
+                    const currentCount = currentPopulation[role] || 0;
 
-                if (currentCount < desiredCount) {
-                    spawnController.addToSpawnQueue(role);
+                    if (currentCount < desiredCount) {
+                        spawnController.addToSpawnQueue(role);
+                        console.log(`Added ${role} to spawn queue`)
+                    }
                 }
             }
         }
@@ -90,7 +114,11 @@ class PopulationController {
      */
     processSpawnQueues() {
         for (let spawnController of this.spawnControllers) {
-            spawnController.processSpawnQueue();
+            if(spawnController){
+                spawnController.processSpawnQueue();
+            }else{
+                console.log('spawnController is undefined' + spawnController);
+            }
         }
     }
     
@@ -100,7 +128,9 @@ class PopulationController {
      */
     executeCreepRoles() {
         for (let spawnName in this.spawnControllers) {
-            this.spawnControllers[spawnName].runLocalCreeps();
+            if(spawnName){
+                this.spawnControllers[spawnName].runLocalCreeps();
+            }
         }
     }
 

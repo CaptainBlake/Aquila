@@ -25,7 +25,7 @@ const Claimer = require("./role_claimer");
  */
 class SpawnController {
     constructor(spawn = null) {
-        this.local_spawns = [spawn, null, null];
+        this.local_spawn = spawn;
         this.spawnQueue = [];
         this.local_creeps = [];
         this.current_harvesters = 0;
@@ -37,19 +37,18 @@ class SpawnController {
         this.current_miners = 0;
         this.current_scouts = 0;
         this.current_claimers = 0;
+        this.initializeSpawnQueue();
     }
 
     /**
      * Initializes the spawn queue for the spawn.
      */
     initializeSpawnQueue() {
-        this.local_spawns.forEach((spawn, index) => {
-            if(!spawn) return;
-            if (!spawn.memory.spawnQueue) {
-                spawn.memory.spawnQueue = [];
-            }
-            this.spawnQueue[index] = new PriorityQueue(spawn.memory.spawnQueue);
-        });
+        if(!this.local_spawn) return;
+        if (!this.local_spawn.memory.spawnQueue) {
+            this.local_spawn.memory.spawnQueue = [];
+        }
+        this.spawnQueue = new PriorityQueue(this.local_spawn.memory.spawnQueue);
     }
 
     /**
@@ -158,14 +157,12 @@ class SpawnController {
      * This method should only be called by the PopulationController.
      */
     processSpawnQueue() {
-        this.local_spawns.forEach((spawn, index) => {
-            if(!spawn || spawn.spawning) return;
-            while (!this.spawnQueue[index].isEmpty()) {
-                const highestPriorityElement = this.spawnQueue[index].dequeue();
-                this.spawnCreep(highestPriorityElement.item.role, highestPriorityElement.item.priority);
-            }
-            spawn.memory.spawnQueue = this.spawnQueue[index].items;
-        });
+        if(!this.local_spawn || this.local_spawn.spawning) return;
+        while (!this.spawnQueue.isEmpty()) {
+            const highestPriorityElement = this.spawnQueue.dequeue();
+            this.spawnCreep(highestPriorityElement.item.role, highestPriorityElement.item.priority);
+        }
+        this.local_spawn.memory.spawnQueue = this.spawnQueue.items;
     }
 
     /**
@@ -174,11 +171,8 @@ class SpawnController {
      * @param priority - the priority of the creep
      */
     addToSpawnQueue(role, priority = constants.SPAWN_QUEUE_LOW_PRIORITY) {
-        for (let spawn of this.local_spawns) {
-            if (spawn && !spawn.spawning) {
-                spawn.memory.spawnQueue.enqueue({ role }, priority);
-                return;
-            }
+        if (this.local_spawn && !this.local_spawn.spawning) {
+            this.local_spawn.memory.spawnQueue.enqueue({ role }, priority);
         }
     }
 
@@ -188,35 +182,30 @@ class SpawnController {
      * @param priority - the priority of the creep
      */
     spawnCreep(role, priority = constants.SPAWN_QUEUE_LOW_PRIORITY) {
-        const body = this.getDynamicBodyParts(role);
+        if(!this.local_spawn || this.local_spawn.spawning) return;
 
-        for (let spawn of this.local_spawns) {
-            if (spawn && !spawn.spawning) {
-                const result = spawn.spawnCreep(body, `${role}_${Game.time}`, {
-                    memory: {
-                        role: role,
-                        state: 'initializing',
-                        target: null,
-                        home: spawn.room.name,
-                        workParts: body.filter(part => part === WORK).length,
-                        priority: priority,
-                        born: Game.time
-                    }
-                });
-                // If the spawn was successful, add the creep to the local_creeps array
-                if (result === OK) {
-                    console.log(`Spawning new creep: ${role}_${Game.time}`);
-                    const creep = Game.creeps[`${role}_${Game.time}`];
-                    creep.memory.role = role;
-                    this.local_creeps.push(creep); // Add the new creep to the local_creeps array
-                }
-                else{
-                    console.log(`Error spawning creep: ${result}`);
-                }
-                if (result === OK) {
-                    break;
-                }
+        const body = this.getDynamicBodyParts(role);
+        const result = this.local_spawn.spawnCreep(body, `${role}_${Game.time}`, {
+            memory: {
+                role: role,
+                state: 'initializing',
+                target: null,
+                home: this.local_spawn.room.name,
+                workParts: body.filter(part => part === WORK).length,
+                priority: priority,
+                born: Game.time
             }
+        });
+
+        // If the spawn was successful, add the creep to the local_creeps array
+        if (result === OK) {
+            console.log(`Spawning new creep: ${role}_${Game.time}`);
+            const creep = Game.creeps[`${role}_${Game.time}`];
+            creep.memory.role = role;
+            this.local_creeps.push(creep); // Add the new creep to the local_creeps array
+        }
+        else{
+            console.log(`Error spawning creep: ${result}`);
         }
     }
 
@@ -330,6 +319,13 @@ class SpawnController {
     getClaimerBodyParts() {
         return [CLAIM, MOVE]; // Claimers need to claim and move
     }
+
+    addNewSpawn(spawn) {
+        this.local_spawns.push(spawn);
+        this.initializeSpawnQueue();
+    }
+    
+    
 }
 
 module.exports = SpawnController;
