@@ -89,46 +89,29 @@ class SpawnController {
      * Runs the creep roles for the room.
      */
     runLocalCreeps() {
+        const ROLE_TO_CLASS = {
+            [constants.CREEP_ROLE_HARVESTER]: Harvester,
+            [constants.CREEP_ROLE_BUILDER]: Builder,
+            [constants.CREEP_ROLE_DEFENDER]: Defender,
+            [constants.CREEP_ROLE_UPGRADER]: Upgrader,
+            [constants.CREEP_ROLE_REPAIRER]: Repairer,
+            [constants.CREEP_ROLE_CARRIER]: Carrier,
+            [constants.CREEP_ROLE_MINER]: Miner,
+            [constants.CREEP_ROLE_SCOUT]: Scout,
+            [constants.CREEP_ROLE_CLAIMER]: Claimer,
+        };
+
         this.local_creep_names.forEach(creepName => {
             const creep = Game.creeps[creepName];
             if (creep) {
-                let roleInstance;
-                switch (creep.memory.role) {
-                    case constants.CREEP_ROLE_HARVESTER:
-                        roleInstance = new Harvester(creep);
-                        break;
-                    case constants.CREEP_ROLE_BUILDER:
-                        roleInstance = new Builder(creep);
-                        break;
-                    case constants.CREEP_ROLE_DEFENDER:
-                        roleInstance = new Defender(creep);
-                        break;
-                    case constants.CREEP_ROLE_UPGRADER:
-                        roleInstance = new Upgrader(creep);
-                        break;
-                    case constants.CREEP_ROLE_REPAIRER:
-                        roleInstance = new Repairer(creep);
-                        break;
-                    case constants.CREEP_ROLE_CARRIER:
-                        roleInstance = new Carrier(creep);
-                        break;
-                    case constants.CREEP_ROLE_MINER:
-                        roleInstance = new Miner(creep);
-                        break;
-                    case constants.CREEP_ROLE_SCOUT:
-                        roleInstance = new Scout(creep);
-                        break;
-                    case constants.CREEP_ROLE_CLAIMER:
-                        roleInstance = new Claimer(creep);
-                        break;
-                    default:
-                        console.log(`Unknown role: ${creep.memory.role}`);
-                        creep.say('🤔');
-                        break;
-                }
-                if (roleInstance) {
+                const RoleClass = ROLE_TO_CLASS[creep.memory.role];
+                if (RoleClass) {
+                    const roleInstance = new RoleClass(creep);
                     console.log(`Running ${creep.name} as ${creep.memory.role}`);
                     roleInstance.run();
+                } else {
+                    console.log(`Unknown role: ${creep.memory.role}`);
+                    creep.say('🤔');
                 }
             }
         });

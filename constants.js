@@ -54,6 +54,7 @@ const MINIMUM_ROLES_MAP = {
     [CREEP_ROLE_CLAIMER]: MINIMUM_CLAIMERS,
 };
 
+
 const STATES = {
     INITIALIZING: 'initializing',
     IDLE: 'idle',
