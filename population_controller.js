@@ -85,25 +85,26 @@ class PopulationController {
             // if the local population is below the minimum for that role
             // and the spawn queue does not already contain that role (to avoid duplicates)
             for (let role in constants.MINIMUM_ROLES_MAP) {
+                // calculate the desired count for the role
                 const desiredCount = constants.MINIMUM_ROLES_MAP[role];
                 const currentCount = localPopulationTable.get(role) || 0;
-                const queueCount = spawnQueue.filter(queuedRole => queuedRole.item === role).items.length;
+                const queueCount = spawnQueue.filter(queuedRole => queuedRole.item === role).length;
+                
                 //console log for debugging
-                console.log(`${role},= : ${currentCount}, | Q: ${queueCount}, | MIN: ${desiredCount}`);
+                console.log(`| ${role},= : ${currentCount}, | Q: ${queueCount}, | MIN: ${desiredCount} |`);
                 if (currentCount + queueCount < desiredCount) {
-                    //console.log(`adding ${role} to spawn queue for ${spawnController.name}...`)
+                    // calculate the priority for the role based on the gap between the desired count and the current count
+                    // (the smaller the gap, the higher the priority)
+                    let priority = desiredCount - currentCount;
+                    // invert the priority scale (lower number indicates higher priority)
+                    priority = 5 - Math.max(1, Math.min(priority, 5));
+                    // add the role to the spawn queue
+                    spawnQueue.enqueue({role}, priority);
+                    console.log(`adding ${role} to spawn queue with priority ${priority}`);
                     
-                    //TODO: ======================>>>> FIX ME
-                    
-                    //determine priority based on role, energy, and current population gap between desired and actual
-                    let priority = constants.SPAWN_QUEUE_NO_PRIORITY;
-                    
-                    //TODO: ======================>>>> FIX ME
-                    
-                    spawnQueue.enqueue({ role: constants.CREEP_ROLE_HARVESTER }, priority);
                 }
             }
-            // Update the spawn controller's memory
+            // Update the spawn queue for the spawn controller
             spawnController.updateSpawnQueue(spawnQueue);
         }
     }

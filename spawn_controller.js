@@ -30,7 +30,8 @@ class SpawnController {
             this.name = spawn.name + "_Controller";
             this.local_spawn = spawn;
             this.local_creep_names = [];
-            this.spawnQueue = new PriorityQueue(this.local_spawn.memory.spawnQueue);
+            this.spawnQueue = new PriorityQueue();
+            this.spawnQueue.loadFromMemory(this.local_spawn.memory.spawnQueue);
             this.local_population = new Map();
 
             this.roleToBodyPartsMethod = {
@@ -149,7 +150,7 @@ class SpawnController {
         }
         // Update the local spawnQueue and the spawnQueue in memory
         this.spawnQueue = spawnQueue;
-        this.local_spawn.memory.spawnQueue = spawnQueue.items;
+        this.spawnQueue.saveToMemory(this.local_spawn.memory.spawnQueue);
     }
     
     /**
@@ -158,33 +159,22 @@ class SpawnController {
      */
     processSpawnQueue() {
         // print the spawn queue for debugging purposes
-        console.log(`Spawn Queue for ${this.local_spawn.name}:`);
-        console.log(this.spawnQueue.items);
+        //console.log(`Spawn Queue for ${this.local_spawn.name}:`);
         
         if(!this.local_spawn || this.local_spawn.spawning) return;
         while (!this.spawnQueue.isEmpty()) {
-            const highestPriorityElement = this.spawnQueue.dequeue();
-            this.spawnWrappedCreep(highestPriorityElement.item.role, highestPriorityElement.item.priority);
-        }
-        this.local_spawn.memory.spawnQueue = this.spawnQueue.items;
-    }
-
-    /**
-     * Adds a creep to the spawn queue.
-     * @param role - the role of the creep
-     * @param priority - the priority of the creep
-     */
-    addToSpawnQueue(role, priority = constants.SPAWN_QUEUE_LOW_PRIORITY) {
-        if (this.local_spawn && !this.local_spawn.spawning) {
-            this.local_spawn.memory.spawnQueue.enqueue({ role }, priority);
+            const highestPriorityElement = this.spawnQueue.dequeue()
+            this.spawnNewCreep(highestPriorityElement.item.role, highestPriorityElement.item.priority);
+            console.log(`initialize spawn of: ${highestPriorityElement.item.role} with priority ${highestPriorityElement.priority}...`);
         }
     }
-
+    
     /**
      * Spawns a creep with the given role.
      * @param role - the role of the creep
+     * @returns {number} - the result of the spawn attempt
      */
-    spawnWrappedCreep(role) {
+    spawnNewCreep(role) {
         if(!this.local_spawn || this.local_spawn.spawning) return;
 
         const body = this.getDynamicBodyParts(role);
@@ -204,13 +194,7 @@ class SpawnController {
             console.log(`Spawning new creep: ${role}_${Game.time}`);
             const creepName = `${role}_${Game.time}`;
             Game.creeps[creepName].memory.role = role;
-            this.local_creep_names.push(creepName); // Add the new creep to the local_creeps array
-            // Remove the role from the spawnQueue
-            const index = this.spawnQueue.items.findIndex(item => item.element.role === role);
-            if (index !== -1) 
-                this.spawnQueue.items.splice(index, 1);
-            // Update the spawnQueue in memory
-            this.local_spawn.memory.spawnQueue = this.spawnQueue.items;
+            this.local_creep_names.push(creepName);
         }
         else{
             console.log(`Error spawning creep: ${result}`);
