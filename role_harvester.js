@@ -1,60 +1,74 @@
-﻿// role_harvester.js
-
-const CreepRole = require('./role_creep');
+﻿// harvester.js
+const CreepRole = require('role_creep');
+const constants = require('./constants');
 
 function Harvester(creep) {
-    this.creep = creep;
+    console.log(`Creating new Harvester for ${creep.name}`);
     CreepRole.call(this, creep);
 }
 
-// Inherit from CreepRole
 Harvester.prototype = Object.create(CreepRole.prototype);
+Harvester.prototype.constructor = Harvester;
 
-/**
- * run is the main function for the creep
- * harvests energy from a source and delivers it to a target
- */
 Harvester.prototype.run = function() {
-    if (this.creep.memory.harvesting && this.creep.store.getFreeCapacity() === 0) {
-        this.creep.memory.harvesting = false;
-        this.creep.say('🔄 Delivering');
-        delete this.creep.memory.sourceId; // No longer harvesting, so delete the source ID
-    }
-    if (!this.creep.memory.harvesting && this.creep.store.getUsedCapacity() === 0) {
-        this.creep.memory.harvesting = true;
-        this.creep.say('⛏️ Harvesting');
-        delete this.creep.memory.targetId; // No longer delivering, so delete the target ID
-    }
-
-    if (this.creep.memory.harvesting) {
-        let source;
-        if (this.creep.memory.sourceId) {
-            source = Game.getObjectById(this.creep.memory.sourceId);
-        } else {
-            const sources = this.creep.room.find(FIND_SOURCES);
-            source = sources[0];
-            this.creep.memory.sourceId = source.id;
+    this.creep.say('Harvester running! 🚀');
+    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.INITIALIZING) {
+        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.HARVESTING;
+    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.HARVESTING) {
+        let source = Game.getObjectById(this.creep.memory[constants.ATTRIBUTES.SOURCE_ID]);
+        if (!source) {
+            source = this.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+            if (source) {
+                this.updateMemoryAttribute(constants.ATTRIBUTES.SOURCE_ID, source.id);
+            } else {
+                console.log('No sources found');
+                return;
+            }
         }
-        this.creep.harvestEnergy(source);
-    } else {
-        let target;
-        if (this.creep.memory.targetId) {
-            target = Game.getObjectById(this.creep.memory.targetId);
-        } else {
-            const targets = this.creep.room.find(FIND_STRUCTURES, {
+        this.harvestEnergy(source);
+    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.WORKING) {
+        let target = Game.getObjectById(this.creep.memory[constants.ATTRIBUTES.TARGET]);
+        if (!target) {
+            target = this.creep.pos.findClosestByPath(FIND_STRUCTURES, {
                 filter: (structure) => {
-                    return (
-                        (structure.structureType === STRUCTURE_EXTENSION ||
-                            structure.structureType === STRUCTURE_SPAWN ||
-                            structure.structureType === STRUCTURE_TOWER) &&
-                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                    );
-                },
+                    return (structure.structureType === STRUCTURE_EXTENSION ||
+                        structure.structureType === STRUCTURE_SPAWN ||
+                        structure.structureType === STRUCTURE_TOWER) &&
+                        structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                }
             });
-            target = targets[0];
-            this.creep.memory.targetId = target.id;
+            if (target) {
+                this.updateMemoryAttribute(constants.ATTRIBUTES.TARGET, target.id);
+            } else {
+                console.log('No targets found');
+                return;
+            }
         }
-        this.creep.transferEnergy(target);
+        this.transferEnergy(target);
+    }
+};
+
+Harvester.prototype.harvestEnergy = function(source) {
+    if (this.creep.store.getFreeCapacity() > 0) {
+        if (this.creep.memory[constants.ATTRIBUTES.STATE] !== constants.STATES.HARVESTING) {
+            this.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.HARVESTING);
+        }
+        if (this.creep.memory[constants.ATTRIBUTES.SOURCE_ID] !== source.id) {
+            this.updateMemoryAttribute(constants.ATTRIBUTES.SOURCE_ID, source.id);
+        }
+        this.performAction(this.creep.harvest.bind(this.creep), source);
+    }
+};
+
+Harvester.prototype.transferEnergy = function(target) {
+    if (this.creep.store.getUsedCapacity() > 0) {
+        if (this.creep.memory[constants.ATTRIBUTES.STATE] !== constants.STATES.WORKING) {
+            this.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.WORKING);
+        }
+        if (this.creep.memory[constants.ATTRIBUTES.TARGET] !== target.id) {
+            this.updateMemoryAttribute(constants.ATTRIBUTES.TARGET, target.id);
+        }
+        this.performAction(this.creep.transfer.bind(this.creep, RESOURCE_ENERGY), target);
     }
 };
 

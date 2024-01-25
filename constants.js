@@ -54,6 +54,31 @@ const MINIMUM_ROLES_MAP = {
     [CREEP_ROLE_CLAIMER]: MINIMUM_CLAIMERS,
 };
 
+const STATES = {
+    INITIALIZING: 'initializing',
+    IDLE: 'idle',
+    HARVESTING: 'harvesting',
+    WORKING: 'working',
+    RUNNING: 'running',
+    DEFENDING: 'defending',
+    ATTACKING: 'attacking',
+    FLEEING: 'fleeing',
+    HEALING: 'healing',
+    REPAIRING: 'repairing',
+    BUILDING: 'building',
+    UPGRADING: 'upgrading'
+};
+
+const ATTRIBUTES = {
+    ROLE: 'role',
+    STATE: 'state',
+    TARGET: 'target',
+    HOME: 'home',
+    WORK_PARTS: 'workParts',
+    BORN: 'born',
+    SOURCE_ID: 'sourceId'
+};
+
 // Exported constants object
 const constants = {
     CREEP_ROLE_HARVESTER,
@@ -91,6 +116,8 @@ const constants = {
     PATHFINDING_SWAMP_COST,
     
     MINIMUM_ROLES_MAP,
+    STATES,
+    ATTRIBUTES
 };
 
 module.exports = constants;

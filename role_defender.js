@@ -1,10 +1,19 @@
 ﻿// role_defender.js
+const CreepRole = require('./role_creep');
+const constants = require('./constants');
 
 function Defender(creep) {
-    this.creep = creep;
+    CreepRole.call(this, creep);
 }
 
+Defender.prototype = Object.create(CreepRole.prototype);
+Defender.prototype.constructor = Defender;
+
 Defender.prototype.run = function() {
+    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.INITIALIZING) {
+        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.DEFENDING;
+    }
+
     const hostileCreeps = this.creep.room.find(FIND_HOSTILE_CREEPS);
 
     if (hostileCreeps.length > 0) {

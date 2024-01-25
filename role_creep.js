@@ -12,6 +12,10 @@ function CreepRole(creep) {
  */
 CreepRole.prototype.performAction = function(action, target) {
     try {
+        if (!target) {
+            console.log('Target is null or undefined');
+            return;
+        }
         const result = action(target);
         if (result === ERR_NOT_IN_RANGE) {
             this.moveToTarget(target);
@@ -23,13 +27,22 @@ CreepRole.prototype.performAction = function(action, target) {
 };
 
 /**
- * updateMemoryAttributes updates the creep's memory attributes with the specified attributes
- * @param attributes - the attributes to update
+ * updateMemoryAttribute updates a single attribute in the creep's memory
+ * list of attributes to update:
+ * - role (should not be updated)
+ * - state = initializing, idle, working, running, defending, attacking, fleeing, healing, repairing, building, upgrading
+ * - target = id of the target object
+ * - home = name of the home room (should not be updated)
+ * - workParts = number of work parts
+ * - born = game time the creep was spawned (should not be updated)
+ * - sourceId = id of the source object
+ * @param key - the key of the attribute to update
+ * @param value - the new value for the attribute
  */
-CreepRole.prototype.updateMemoryAttributes = function(attributes) {
-    for (let key in attributes) {
-        this.creep.memory[key] = attributes[key];
-    }
+CreepRole.prototype.updateMemoryAttribute = function(key, value) {
+    //check if key is not null and key is not undefined in memory
+    if (!key || !this.creep.memory[key]) return;
+    this.creep.memory[key] = value;
 };
 
 /**
@@ -40,40 +53,12 @@ CreepRole.prototype.updateMemoryAttributes = function(attributes) {
  * @param {Object} target - The target object to move to.
  */
 CreepRole.prototype.moveToTarget = function(target) {
-    try {
-        let targetPos = `${target.pos.x},${target.pos.y}`;
-        if (this.creep.memory._move && this.creep.memory._move.path && this.creep.memory._move.targetPos === targetPos) {
-            let path = Room.deserializePath(this.creep.memory._move.path);
-            if (this.creep.moveByPath(path) === ERR_NOT_FOUND) {
-                delete this.creep.memory._move;
-            }
-        } else {
-            let path = this.creep.pos.findPathTo(target, {
-                plainCost: constants.PATHFINDING_PLAIN_COST,
-                swampCost: constants.PATHFINDING_SWAMP_COST,
-                roomCallback: function(roomName) {
-                    let room = Game.rooms[roomName];
-                    if (!room) throw new Error('Room not found');
-                    let costs = new PathFinder.CostMatrix;
-                    room.find(FIND_STRUCTURES).forEach(function(structure) {
-                        if (structure.structureType === STRUCTURE_ROAD) {
-                            costs.set(structure.pos.x, structure.pos.y, 1);
-                        }
-                    });
-                    return costs;
-                },
-                ignoreCreeps: true
-            });
-            if (path.length > 0) {
-                this.creep.memory._move = { path: Room.serializePath(path), targetPos: targetPos };
-                this.creep.move(path[0].direction);
-            } else {
-                this.creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
-            }
-        }
-    } catch (error) {
-        console.error(`Error in moveToTarget: ${error.message}`);
-    }
+    if (!target.pos) return;
+    // store the target id in memory if it is different from the current target
+    if (this.creep.memory.target !== target.id)
+        this.creep.memory.target = target.id;
+
+    // check if creep is already moving to the target
 };
 
 /**
