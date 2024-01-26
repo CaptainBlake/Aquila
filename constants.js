@@ -13,12 +13,12 @@ const CREEP_ROLE_CLAIMER = 'claimer';  // Creeps that claim new rooms
 
 // Minimum number of creeps per role per room 
 const MINIMUM_HARVESTERS = 2;
-const MINIMUM_BUILDERS = 2;
+const MINIMUM_BUILDERS = 1;
 const MINIMUM_DEFENDERS = 1;
-const MINIMUM_UPGRADERS = 2;
+const MINIMUM_UPGRADERS = 1;
 const MINIMUM_REPAIRERS = 1;
 const MINIMUM_CARRIERS = 1;
-const MINIMUM_MINERS = 1;
+const MINIMUM_MINERS = 0;
 const MINIMUM_SCOUTS = 0;
 const MINIMUM_CLAIMERS = 0;
 
@@ -67,7 +67,10 @@ const STATES = {
     HEALING: 'healing',
     REPAIRING: 'repairing',
     BUILDING: 'building',
-    UPGRADING: 'upgrading'
+    UPGRADING: 'upgrading',
+    MINING: 'mining',
+    SCOUTING: 'scouting',
+    CLAIMING: 'claiming'
 };
 
 const ATTRIBUTES = {

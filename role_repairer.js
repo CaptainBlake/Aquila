@@ -1,39 +1,56 @@
 ﻿// role_repairer.js
-const CreepRole = require('./role_creep');
 const constants = require('./constants');
+const MyCreep = require("./creep_prototype");
 
-function Repairer(creep) {
-    CreepRole.call(this, creep);
-}
+let roleRepairer = {
 
-Repairer.prototype = Object.create(CreepRole.prototype);
-Repairer.prototype.constructor = Repairer;
+    /** @param {Creep} _creep **/
 
-Repairer.prototype.run = function() {
-    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.INITIALIZING) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.REPAIRING;
-    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.REPAIRING && this.creep.store[RESOURCE_ENERGY] === 0) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.IDLE;
-        this.creep.say('🔄 Idle');
-    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.IDLE && this.creep.store.getFreeCapacity() === 0) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.REPAIRING;
-        this.creep.say('🔧 Repairing');
-    }
+    run: function(_creep) {
+        // == check state == //
+        let myCreep = new MyCreep(_creep);
+        // if creep is spawning, return
+        if (myCreep.creep.spawning){
+            console.log(`Creep ${myCreep.creep.name} is spawning...`);
+            return;
+        }
+        // after spawning, set state to repairing
+        if (myCreep.creep.memory.state === constants.STATES.INITIALIZING) {
+            console.log("...done spawning");
+            myCreep.creep.memory.state = constants.STATES.REPAIRING;
+        }
+        // check if creep is working and needs to switch state
+        if (myCreep.creep.memory.state === constants.STATES.REPAIRING && myCreep.creep.store.getFreeCapacity() === 0) {
+            myCreep.creep.memory.state = constants.STATES.IDLE;
+            myCreep.creep.say('🔄 Idle');
+        }
+        // check if creep is idle and needs to switch state
+        if (myCreep.creep.memory.state === constants.STATES.IDLE && myCreep.creep.store.getUsedCapacity() === 0) {
+            myCreep.creep.memory.state = constants.STATES.REPAIRING;
+            myCreep.creep.say('🔧 Repairing');
+        }
 
-    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.REPAIRING) {
-        const targets = this.creep.room.find(FIND_STRUCTURES, {
-            filter: object => object.hits < object.hitsMax
-        });
-        targets.sort((a,b) => a.hits - b.hits);
-        if(targets.length > 0) {
-            if(this.creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
-                this.creep.moveTo(targets[0]);
+        // == perform actions == //
+
+        // if creep is supposed to be repairing
+        if (myCreep.creep.memory.state === constants.STATES.REPAIRING) {
+            const targets = myCreep.creep.room.find(FIND_STRUCTURES, {
+                filter: object => object.hits < object.hitsMax
+            });
+            targets.sort((a,b) => a.hits - b.hits);
+            if(targets.length > 0) {
+                if(myCreep.creep.repair(targets[0]) == ERR_NOT_IN_RANGE) {
+                    myCreep.creep.moveTo(targets[0]);
+                }
             }
         }
-    } else {
-        // Repairer is idle, waiting for energy to be available
-        this.creep.say('⏳ Waiting for energy');
+
+        // if creep is supposed to be idle
+        if (myCreep.creep.memory.state === constants.STATES.IDLE) {
+            // wait for energy to be available
+            myCreep.creep.say('⏳ Waiting for energy');
+        }
     }
 };
 
-module.exports = Repairer;
+module.exports = roleRepairer;

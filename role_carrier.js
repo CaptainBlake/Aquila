@@ -1,39 +1,59 @@
 ﻿// role_carrier.js
-const CreepRole = require('./role_creep');
 const constants = require('./constants');
+const MyCreep = require("./creep_prototype");
 
-function Carrier(creep) {
-    CreepRole.call(this, creep);
-}
+let roleCarrier = {
 
-Carrier.prototype = Object.create(CreepRole.prototype);
-Carrier.prototype.constructor = Carrier;
+    /** @param {Creep} _creep **/
 
-Carrier.prototype.run = function() {
-    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.INITIALIZING) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.IDLE;
-    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.IDLE && this.creep.store.getFreeCapacity() === 0) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.WORKING;
-        this.creep.say('🚚 Carrying');
-    } else if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.WORKING && this.creep.store[RESOURCE_ENERGY] === 0) {
-        this.creep.memory[constants.ATTRIBUTES.STATE] = constants.STATES.IDLE;
-        this.creep.say('🔄 Idle');
-    }
-
-    if (this.creep.memory[constants.ATTRIBUTES.STATE] === constants.STATES.WORKING) {
-        const targets = this.creep.room.find(FIND_STRUCTURES, {
-            filter: (structure) => {
-                return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
-                    structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
-            }
-        });
-        if (targets.length > 0) {
-            this.transferEnergy(targets[0]);
+    run: function(_creep) {
+        // == check state == //
+        let myCreep = new MyCreep(_creep);
+        // if creep is spawning, return
+        if (myCreep.creep.spawning){
+            console.log(`Creep ${myCreep.creep.name} is spawning...`);
+            return;
         }
-    } else {
-        // Carrier is idle, waiting for energy to be available
-        this.creep.say('⏳ Waiting for energy');
+        // after spawning, set state to idle
+        if (myCreep.creep.memory.state === constants.STATES.INITIALIZING) {
+            console.log("...done spawning");
+            myCreep.creep.memory.state = constants.STATES.IDLE;
+        }
+        // check if creep is working and needs to switch state
+        if (myCreep.creep.memory.state === constants.STATES.WORKING && myCreep.creep.store.getFreeCapacity() === 0) {
+            myCreep.creep.memory.state = constants.STATES.IDLE;
+            myCreep.creep.say('🔄 Idle');
+        }
+        // check if creep is idle and needs to switch state
+        if (myCreep.creep.memory.state === constants.STATES.IDLE && myCreep.creep.store.getUsedCapacity() === 0) {
+            myCreep.creep.memory.state = constants.STATES.WORKING;
+            myCreep.creep.say('🚚 Carrying');
+        }
+
+        // == perform actions == //
+
+        // if creep is supposed to be working
+        if (myCreep.creep.memory.state === constants.STATES.WORKING) {
+            let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null;
+            if (!target || target.store.getFreeCapacity(RESOURCE_ENERGY) === 0) {
+                // find closest structure that needs energy
+                target = myCreep.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (structure) => {
+                        return (structure.structureType == STRUCTURE_EXTENSION || structure.structureType == STRUCTURE_SPAWN) &&
+                            structure.store.getFreeCapacity(RESOURCE_ENERGY) > 0;
+                    }
+                });
+                myCreep.creep.memory.target = target.id;
+            }
+            myCreep.transferEnergy(target);
+        }
+
+        // if creep is supposed to be idle
+        if (myCreep.creep.memory.state === constants.STATES.IDLE) {
+            // wait for energy to be available
+            myCreep.creep.say('⏳ Waiting for energy');
+        }
     }
 };
 
-module.exports = Carrier;
+module.exports = roleCarrier;

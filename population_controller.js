@@ -1,9 +1,12 @@
-﻿//population_controller.js
+﻿'use strict';
+//population_controller.js
 
 //import controllers
 const SpawnController = require('./spawn_controller');
 //import constants
 const constants = require('./constants');
+
+
 
 class PopulationController {
     
@@ -83,15 +86,11 @@ class PopulationController {
                 const desiredCount = constants.MINIMUM_ROLES_MAP[role];
                 const currentCount = localPopulationTable.get(role) || 0;
                 const queueCount = spawnQueue.filter(queuedRole => queuedRole.role === role).length;
-                //console.log(`| ${role},= : ${currentCount}, | Q: ${queueCount}, | MIN: ${desiredCount} |`);
                 if (currentCount + queueCount < desiredCount) {
-                    // Check if the role is already in the spawnQueue
-                    if (!spawnQueue.some(queuedRole => queuedRole.role === role)) {
-                        let priority = desiredCount - currentCount;
-                        priority = 5 - Math.max(1, Math.min(priority, 5));
-                        spawnQueue.push({role, priority});
-                        console.log(`adding ${role} to spawn queue with priority ${priority}`);
-                    }
+                    let priority = desiredCount - currentCount;
+                    priority = 5 - Math.max(1, Math.min(priority, 5));
+                    spawnQueue.push({role, priority});
+                    console.log(`adding ${role} to spawn queue with priority ${priority}`);
                 }
             }
             spawnController.updateSpawnQueue(spawnQueue);

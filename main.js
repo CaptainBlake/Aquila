@@ -26,18 +26,21 @@ Feel free to customize this code to suit your specific implementation and strate
 Happy coding and conquering the Screeps world with Aquila!
 ===============================================================================
 */
-
+'use strict';
 // Controller
 const globalGameStateController = require('global_game_state_controller');
 const populationController = require('./population_controller');
 
 // initialize singleton controllers
 
+const main = function() {
+    // run population controller
+    populationController.taskLoop();
+    // run global game state controller
+    globalGameStateController.taskLoop();
+}
+
 
 module.exports.loop = function () {
-    // initialize controllers
-    // update game state
-    globalGameStateController.taskLoop();
-    // process population controller
-    populationController.taskLoop();
+    main();
 };
