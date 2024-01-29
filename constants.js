@@ -11,13 +11,26 @@ const CREEP_ROLE_MINER = 'miner';  // Creeps that mine energy from a source
 const CREEP_ROLE_SCOUT = 'scout';  // Creeps that scout out new rooms
 const CREEP_ROLE_CLAIMER = 'claimer';  // Creeps that claim new rooms
 
+// Creep roles as an array
+const CREEP_ROLES = [
+    CREEP_ROLE_HARVESTER,
+    CREEP_ROLE_BUILDER,
+    CREEP_ROLE_DEFENDER,
+    CREEP_ROLE_UPGRADER,
+    CREEP_ROLE_REPAIRER,
+    CREEP_ROLE_CARRIER,
+    CREEP_ROLE_MINER,
+    CREEP_ROLE_SCOUT,
+    CREEP_ROLE_CLAIMER
+];
+
 // Minimum number of creeps per role per room 
-const MINIMUM_HARVESTERS = 2;
+const MINIMUM_HARVESTERS = 1;
 const MINIMUM_BUILDERS = 1;
-const MINIMUM_DEFENDERS = 1;
-const MINIMUM_UPGRADERS = 1;
-const MINIMUM_REPAIRERS = 1;
-const MINIMUM_CARRIERS = 1;
+const MINIMUM_DEFENDERS = 0;
+const MINIMUM_UPGRADERS = 0;
+const MINIMUM_REPAIRERS = 0;
+const MINIMUM_CARRIERS = 0;
 const MINIMUM_MINERS = 0;
 const MINIMUM_SCOUTS = 0;
 const MINIMUM_CLAIMERS = 0;
@@ -70,7 +83,8 @@ const STATES = {
     UPGRADING: 'upgrading',
     MINING: 'mining',
     SCOUTING: 'scouting',
-    CLAIMING: 'claiming'
+    CLAIMING: 'claiming',
+    COLLECTING: 'collecting',
 };
 
 const ATTRIBUTES = {
@@ -94,6 +108,8 @@ const constants = {
     CREEP_ROLE_MINER,
     CREEP_ROLE_SCOUT,
     CREEP_ROLE_CLAIMER,
+    
+    CREEP_ROLES,
     
     MINIMUM_HARVESTERS,
     MINIMUM_BUILDERS,

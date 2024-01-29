@@ -97,10 +97,10 @@ class SpawnController {
      */
     getLocalPopulationTable() {
         let roomPopulation = new Map();
-        for (let role in constants) {
+        for (let role of constants.CREEP_ROLES) {
+            //console.log("checking population for role: " + role);
             roomPopulation.set(role, this.local_creep_names.filter(creepName => Game.creeps[creepName] && Game.creeps[creepName].memory.role === role).length);
         }
-        this.local_spawn.room.memory.local_population = Array.from(roomPopulation.entries());
         this.local_spawn.memory.local_creeps_names = this.local_creep_names;
         return roomPopulation;
     }
@@ -139,36 +139,28 @@ class SpawnController {
         // Save spawnQueue to memory
         this.local_spawn.memory.spawnQueue = this.spawnQueue;
     }
-    
-    /**
-     * Processes the spawn queue for a given spawn.
-     * This method should only be called by the PopulationController.
-     */
-    
-    //TODO: FIX ME! This method is not working properly
-    // elements are not being removed from the spawn queue
+
     processSpawnQueue() {
-        if (!this.local_spawn || this.local_spawn.spawning) return;
-        // Spawn the creep with the highest priority
-        if (this.spawnQueue.length > 0) {
-            // Sort spawnQueue based on priority
-            this.spawnQueue.sort((a, b) => a.priority - b.priority);
-            // print the spawn queue to the console
-            console.log("Queued number: " + this.spawnQueue.length);
-            console.log("Queued creeps: " + JSON.stringify(this.spawnQueue));
-            const creepRole = this.spawnQueue[0].role;
-            if (this.isSpawnable(creepRole)) {
-                this.spawnNewCreep(creepRole).then(() => {
-                    // Remove the creep from the spawnQueue
-                    this.spawnQueue.shift();
-                    // Save spawnQueue to memory
-                    this.local_spawn.memory.spawnQueue = this.spawnQueue;
-                    // Update local copy of spawnQueue
-                    this.spawnQueue = this.local_spawn.memory.spawnQueue;
-                });
-            }else{
-                //console.log(`Cannot spawn ${creepRole} due to insufficient resources or spawn is busy.` + ` \nAvailable energy: ${this.local_spawn.room.energyAvailable}` + ` \nSpawn busy: ${this.local_spawn.spawning}` + ` \nCreep cost: ${this.getBodyPartsForRole(creepRole).length * 50}`);
+        try {
+            if (!this.local_spawn || this.local_spawn.spawning) return;
+            if (this.spawnQueue.length > 0) {
+                this.spawnQueue.sort((a, b) => a.priority - b.priority);
+                const creepRole = this.spawnQueue[0].role;
+                if (this.isSpawnable(creepRole)) {
+                    const creepName = this.spawnNewCreep(creepRole);
+                    if (creepName) {
+                        this.local_spawn.memory.spawningCreep = creepName;
+                    }
+                }
             }
+            if (this.local_spawn.memory.spawningCreep && !Game.creeps[this.local_spawn.memory.spawningCreep]) {
+                this.spawnQueue.shift();
+                this.local_spawn.memory.spawnQueue = this.spawnQueue;
+                this.spawnQueue = this.local_spawn.memory.spawnQueue;
+                delete this.local_spawn.memory.spawningCreep;
+            }
+        } catch (error) {
+            console.error(`Error processing spawn queue: ${error}`);
         }
     }
 
@@ -188,9 +180,10 @@ class SpawnController {
      * @param role - the role of the creep
      */
     spawnNewCreep(role) {
-        return new Promise((resolve, reject) => {
+        try {
             const body = this.getBodyPartsForRole(role);
-            const result = this.local_spawn.spawnCreep(body, `${role}_${Game.time}`, {
+            const creepName = `${role}_${Game.time}`;
+            const result = this.local_spawn.spawnCreep(body, creepName, {
                 memory: {
                     role: role,
                     state: 'initializing',
@@ -201,19 +194,19 @@ class SpawnController {
                 }
             });
 
-            // If the spawn was successful, add the creep to the local_creeps array
             if (result === OK) {
-                console.log(`Spawning new creep: ${role}_${Game.time}`);
-                const creepName = `${role}_${Game.time}`;
+                console.log(`Spawning new creep: ${creepName}`);
                 Game.creeps[creepName].memory.role = role;
                 this.local_creep_names.push(creepName);
-                resolve();
-            }
-            else{
+                return creepName;
+            } else {
                 console.log(`Error spawning creep: ${result}`);
-                reject();
+                return null;
             }
-        });
+        } catch (error) {
+            console.error(`Error spawning new creep: ${error}`);
+            return null;
+        }
     }
     // BODY PARTS
     // TODO: outsource body parts to a separate prototype class for each role (e.g. HarvesterBodyParts)

@@ -82,11 +82,25 @@ class PopulationController {
         for (let spawnController of this.spawnControllers) {
             let localPopulationTable = new Map(this.globalPopulationMap.get(spawnController.name));
             let spawnQueue = spawnController.spawnQueue;
+            console.log("===========================================");
             for (let role in constants.MINIMUM_ROLES_MAP) {
                 const desiredCount = constants.MINIMUM_ROLES_MAP[role];
                 const currentCount = localPopulationTable.get(role) || 0;
-                const queueCount = spawnQueue.filter(queuedRole => queuedRole.role === role).length;
-                if (currentCount + queueCount < desiredCount) {
+                let queueCount = spawnQueue.filter(queuedRole => queuedRole.role === role).length;
+                console.log(`role: ${role}, currentCount: ${currentCount}, desiredCount: ${desiredCount}, queueCount: ${queueCount}`);
+                if (currentCount + queueCount > desiredCount) {
+                    while (currentCount + queueCount > desiredCount) {
+                        // Find the index of the first element in the queue with the current role
+                        const index = spawnQueue.findIndex(queuedRole => queuedRole.role === role);
+                        // Remove the element from the queue
+                        if (index !== -1) {
+                            spawnQueue.splice(index, 1);
+                        }
+                        // Update the queue count
+                        queueCount = spawnQueue.filter(queuedRole => queuedRole.role === role).length;
+                    }
+                    console.log(`removed ${role} from spawn queue to match desired count`);
+                } else if (currentCount + queueCount < desiredCount) {
                     let priority = desiredCount - currentCount;
                     priority = 5 - Math.max(1, Math.min(priority, 5));
                     spawnQueue.push({role, priority});
@@ -94,6 +108,7 @@ class PopulationController {
                 }
             }
             spawnController.updateSpawnQueue(spawnQueue);
+            console.log(`spawnQueue length: ${spawnQueue.length}\n spawnQueue: ${JSON.stringify(spawnQueue)}`);
         }
     }
 

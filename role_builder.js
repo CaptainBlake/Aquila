@@ -7,52 +7,56 @@ let roleBuilder = {
     /** @param {Creep} _creep **/
 
     run: function(_creep) {
-        // == check state == //
         let myCreep = new MyCreep(_creep);
-        // if creep is spawning, return
-        if (myCreep.creep.spawning){
-            console.log(`Creep ${myCreep.creep.name} is spawning...`);
-            return;
-        }
-        // after spawning, set state to building
-        if (myCreep.creep.memory.state === constants.STATES.INITIALIZING) {
-            console.log("...done spawning");
+
+        // If creep's energy carry is full, go building
+        if (myCreep.creep.store.getFreeCapacity() === 0) {
             myCreep.creep.memory.state = constants.STATES.BUILDING;
         }
-        // check if creep is working and needs to switch state
-        if (myCreep.creep.memory.state === constants.STATES.BUILDING && myCreep.creep.store.getFreeCapacity() === 0) {
-            myCreep.creep.memory.state = constants.STATES.IDLE;
-            myCreep.creep.say('🔄 Idle');
-        }
-        // check if creep is idle and needs to switch state
-        if (myCreep.creep.memory.state === constants.STATES.IDLE && myCreep.creep.store.getUsedCapacity() === 0) {
-            myCreep.creep.memory.state = constants.STATES.BUILDING;
-            myCreep.creep.say('🚧 Building');
+
+        // If creep's energy carry is empty, go harvesting
+        else if (myCreep.creep.store.getUsedCapacity() === 0) {
+            myCreep.creep.memory.state = constants.STATES.HARVESTING;
         }
 
-        // == perform actions == //
-
-        // if creep is supposed to be building
+        // Perform actions based on state
         if (myCreep.creep.memory.state === constants.STATES.BUILDING) {
+            // build stuff
             let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null;
             if (!target || target.progress === target.progressTotal) {
                 // find closest construction site
                 target = myCreep.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
                 myCreep.creep.memory.target = target.id;
             }
-            myCreep.buildStructure(target);
-        }
-
-        // if creep is supposed to be idle
-        if (myCreep.creep.memory.state === constants.STATES.IDLE) {
-            // find closest source
+            if (target) {
+                myCreep.buildStructure(target);
+            }
+        } else if (myCreep.creep.memory.state === constants.STATES.HARVESTING) {
+            // harvest stuff
             let source = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null;
-            if (!source || source.energy === 0) {
-                // find closest source
-                source = myCreep.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+            // check if target is not a source
+            if (source instanceof ConstructionSite) {
+                // find closest source or structure with energy
+                source = myCreep.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) && s.store.getUsedCapacity(RESOURCE_ENERGY) > 0
+                });
+                if (!source || source.store.getUsedCapacity(RESOURCE_ENERGY) === 0) {
+                    source = myCreep.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
+                }
                 myCreep.creep.memory.target = source.id;
             }
-            myCreep.harvestEnergy(source);
+            if (source.structureType) {
+                myCreep.creep.say("🔌")
+                let result = myCreep.creep.withdraw(source, RESOURCE_ENERGY);
+                if (result === ERR_NOT_IN_RANGE) {
+                    myCreep.creep.moveTo(source);
+                } else if (result < 0) {
+                    myCreep.handleError(result, source);
+                }
+            } else {
+                myCreep.creep.say("🔄")
+                myCreep.harvestEnergy(source);
+            }
         }
     }
 };
