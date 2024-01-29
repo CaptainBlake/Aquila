@@ -108,7 +108,7 @@ class PopulationController {
                 }
             }
             spawnController.updateSpawnQueue(spawnQueue);
-            console.log(`spawnQueue length: ${spawnQueue.length}\n spawnQueue: ${JSON.stringify(spawnQueue)}`);
+            //console.log(`spawnQueue length: ${spawnQueue.length}\n spawnQueue: ${JSON.stringify(spawnQueue)}`);
         }
     }
 

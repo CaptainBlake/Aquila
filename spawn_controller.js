@@ -195,7 +195,7 @@ class SpawnController {
             });
 
             if (result === OK) {
-                console.log(`Spawning new creep: ${creepName}`);
+                //console.log(`Spawning new creep: ${creepName}`);
                 Game.creeps[creepName].memory.role = role;
                 this.local_creep_names.push(creepName);
                 return creepName;

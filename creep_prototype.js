@@ -11,14 +11,14 @@ function MyCreep(creep) {
  */
 MyCreep.prototype.performAction = function(action, target) {
     try {
-        if (!target) {
-            console.log('Target is null or undefined');
-            return;
-        }
+        
         const result = action(target);
-        if(result !== OK) {this.handleError(result,action, target);}
         if (result === ERR_NOT_IN_RANGE) {
             this.moveToTarget(target);
+            return OK;
+        }
+        if(result !== OK){
+            this.handleError(result,action, target);
         }
         return result;
     } catch (error) {
@@ -39,6 +39,7 @@ MyCreep.prototype.handleError = function(result, target) {
         case ERR_NOT_FOUND:
             console.log(`Target ${target} not found`);
             this.creep.say('No tgt');
+            this.creep.memory.target = null;
             break;
         case ERR_NOT_ENOUGH_RESOURCES:
             console.log(`Target ${target} does not have enough resources`);
@@ -47,14 +48,17 @@ MyCreep.prototype.handleError = function(result, target) {
         case ERR_INVALID_TARGET:
             console.log(`Target ${target} is invalid`);
             this.creep.say('Inv tgt');
+            this.creep.memory.target = null;
             break;
         case ERR_FULL:
             console.log(`Target ${target} is full`);
             this.creep.say('Full');
+            this.creep.memory.target = null;
             break;
         case ERR_INVALID_ARGS:
             console.log(`Invalid arguments for target ${target}`);
             this.creep.say('Inv arg');
+            this.creep.memory.target = null;
             break;
         case ERR_TIRED:
             console.log(`Target ${target} is tired`);
@@ -77,8 +81,9 @@ MyCreep.prototype.handleError = function(result, target) {
             this.creep.say('Low GCL');
             break;
         default:
-            console.log(`Unknown error for creep ${this.creep.name} and target ${target}: ${result}`);
-            this.creep.say('Err');
+            //console.log(`Unknown error for creep ${this.creep.name} and target ${target}: ${result}`);
+            this.creep.memory.target = null;
+            //this.creep.say({result});
     }
 }
 
@@ -110,7 +115,6 @@ MyCreep.prototype.buildStructure = function(target) {
 };
 
 MyCreep.prototype.upgradeController = function(target) {
-    if (this.creep.store.getUsedCapacity() === 0) return;
     this.performAction(this.creep.upgradeController.bind(this.creep), target);
 }
 

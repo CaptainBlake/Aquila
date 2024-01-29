@@ -25,10 +25,10 @@ const CREEP_ROLES = [
 ];
 
 // Minimum number of creeps per role per room 
-const MINIMUM_HARVESTERS = 1;
+const MINIMUM_HARVESTERS = 2;
 const MINIMUM_BUILDERS = 1;
 const MINIMUM_DEFENDERS = 0;
-const MINIMUM_UPGRADERS = 0;
+const MINIMUM_UPGRADERS = 1;
 const MINIMUM_REPAIRERS = 0;
 const MINIMUM_CARRIERS = 0;
 const MINIMUM_MINERS = 0;
