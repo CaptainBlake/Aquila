@@ -94,7 +94,9 @@ const ATTRIBUTES = {
     HOME: 'home',
     WORK_PARTS: 'workParts',
     BORN: 'born',
-    SOURCE_ID: 'sourceId'
+    PATH: 'path',
+    LAST_TARGET_POS: 'lastTargetPos',
+    LAST_POSITION: 'lastPosition',
 };
 
 // Exported constants object
