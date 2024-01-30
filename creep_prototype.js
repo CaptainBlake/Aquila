@@ -13,16 +13,20 @@ MyCreep.prototype.performAction = function(action, target) {
     try {
         
         const result = action(target);
+        // move to target if not in range
         if (result === ERR_NOT_IN_RANGE) {
             this.moveToTarget(target);
             return OK;
         }
-        if(result !== OK && result !== ERR_NOT_IN_RANGE){
-            this.handleError(result,action, target);
-        }
+        // clear path if target is reached
+        if(result === OK) this.creep.memory.path = null;
+        // internal error handling
+        if(result !== OK && result !== ERR_NOT_IN_RANGE) this.handleError(result,action, target);
+        
+        
         return result;
     } catch (error) {
-        console.error(`Error in performAction: ${error.message}`);
+        console.log("Error in MyCreep.performAction: " + error);
     }
 };
 
@@ -110,13 +114,82 @@ MyCreep.prototype.handleError = function(result, target) {
     }
 }
 
-//TODO: make this smart
+/**
+ * Moves the creep to a specified target.
+ *
+ * This function is a wrapper for creep.moveTo(target) that also handles moving to the target.
+ * It stores a path in memory to avoid recalculating the path every tick.
+ * The path is recalculated when the creep moves to a new room or the position of the target changes.
+ * The path is cleared once the creep reaches the target.
+ * If the creep is stuck (hasn't moved for a certain number of ticks), it forces an update of the path.
+ *
+ * @param {Object} target - The target object to move to.
+ * @returns {number} - The result of the move action.
+ */
 MyCreep.prototype.moveToTarget = function(target) {
-    if (!target || !target.pos) return;
-    const result = this.creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
-    if (result === ERR_NO_PATH) {
-        console.log(`No path found for creep ${this.creep.name} to target at ${target.pos}`);
+    if (!target) {
+        console.log('Target is undefined');
+        return ERR_NOT_FOUND;
     }
+
+    // Check if the creep is stuck
+    if (this.creep.memory.lastPosition &&
+        this.creep.pos.isEqualTo(this.creep.memory.lastPosition) &&
+        Game.time - this.creep.memory.lastMoveTime >= 5) { // Change this value to adjust the number of ticks
+        // The creep is stuck, force an update of the path
+        this.creep.memory.path = null;
+    }
+
+    let path = this.creep.memory.path;
+    if (!path) {
+        let costs = this.createCostMatrix(this.creep.room.name);
+        path = this.creep.pos.findPathTo(target, { costCallback: function() { return costs; } });
+        this.creep.memory.path = path;
+    }
+
+    let result = this.creep.moveByPath(path);
+    if (result === ERR_NOT_FOUND || result === ERR_NO_PATH) {
+        // Path is blocked or doesn't exist, update the cost matrix
+        let costs = this.createCostMatrix(this.creep.room.name);
+        path = this.creep.pos.findPathTo(target, { costCallback: function() { return costs; } });
+        this.creep.memory.path = path;
+        result = this.creep.moveByPath(path);
+    }
+
+    if (result === OK && this.creep.pos.isEqualTo(target.pos)) {
+        this.creep.memory.path = null;
+    }
+
+    // Store the current position and tick count
+    this.creep.memory.lastPosition = this.creep.pos;
+    this.creep.memory.lastMoveTime = Game.time;
+
+    // Return the result of the move action
+    return result;
+};
+
+MyCreep.prototype.createCostMatrix = function(roomName) {
+    let room = Game.rooms[roomName];
+    let costs = new PathFinder.CostMatrix;
+
+    room.find(FIND_STRUCTURES).forEach(function(struct) {
+        if (struct.structureType === STRUCTURE_ROAD) {
+            // Favor roads over plain tiles
+            costs.set(struct.pos.x, struct.pos.y, 1);
+        } else if (struct.structureType !== STRUCTURE_CONTAINER &&
+            (struct.structureType !== STRUCTURE_RAMPART ||
+                !struct.my)) {
+            // Can't walk through non-walkable buildings
+            costs.set(struct.pos.x, struct.pos.y, 0xff);
+        }
+    });
+
+    // Avoid creeps in the room
+    room.find(FIND_CREEPS).forEach(function(creep) {
+        costs.set(creep.pos.x, creep.pos.y, 0xff);
+    });
+
+    return costs;
 };
 
 MyCreep.prototype.updateMemoryAttribute = function(key, value) {
@@ -126,7 +199,7 @@ MyCreep.prototype.updateMemoryAttribute = function(key, value) {
 };
 
 MyCreep.prototype.harvestEnergy = function(source) {
-    this.performAction(this.creep.harvest.bind(this.creep), source);
+    return this.performAction(this.creep.harvest.bind(this.creep), source);
 };
 
 MyCreep.prototype.transferEnergy = function(target) {

@@ -79,7 +79,6 @@ class PopulationController {
      * Uses constants to determine the minimum number of creeps per role per room.
      */
     setRecruitingPlans() {
-        console.log("==================="+ Game.time +"========================");
         for (let spawnController of this.spawnControllers) {
             let localPopulationTable = new Map(this.globalPopulationMap.get(spawnController.name));
             let spawnQueue = spawnController.spawnQueue;

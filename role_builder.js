@@ -66,6 +66,7 @@ let roleBuilder = {
                         break;
                     case ERR_NOT_ENOUGH_RESOURCES:
                         myCreep.creep.memory.target = null;
+                        myCreep.creep.memory.path = null;
                         break;
                     case OK:
                         break;

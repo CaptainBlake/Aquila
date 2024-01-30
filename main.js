@@ -34,13 +34,16 @@ const populationController = require('./population_controller');
 // initialize singleton controllers
 
 const main = function() {
+    
     // run population controller
     populationController.taskLoop();
     // run global game state controller
     globalGameStateController.taskLoop();
+    
 }
 
 
 module.exports.loop = function () {
+    console.log("==================="+ Game.time +"========================");
     main();
 };

@@ -131,18 +131,9 @@ class SpawnController {
                         roleHandler(creep);
                     }
                 } else {
-                    //TODO: kill creep and remove from local_creep_names for now
-                    console.log(`Unknown role: ${creep.memory.role}`);
+                    console.log(`No role handler defined for creep ${creepName}`);
                     // kill creep
-                    creep.kill();
-                    console.log(`Killed creep ${creep.name}`)
-                    // remove creep from local_creep_names
-                    const creepIndex = this.local_creep_names.indexOf(creepName);
-                    if (creepIndex > -1) {
-                        this.local_creep_names.splice(creepIndex, 1);
-                    }
-                    // update local_creep_names in memory
-                    this.local_spawn.memory.local_creeps_names = this.local_creep_names;
+                    
                 }
             } else {
                 console.log(`Creep ${creepName} does not exist yet`);
