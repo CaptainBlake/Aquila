@@ -54,8 +54,10 @@ const ENERGY_THRESHOLD_TIER_3 = 800;
 const ENERGY_MINIMUM_IN_SPAWN = 200; // Minimum energy in a room before creeps can withdraw energy
 
 // Pathfinding constants
+const PATHFINDING_IGNORE_CREEPS = true;
 const PATHFINDING_PLAIN_COST = 2;
 const PATHFINDING_SWAMP_COST = 10;
+
 
 // Maps
 

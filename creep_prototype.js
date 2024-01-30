@@ -17,7 +17,7 @@ MyCreep.prototype.performAction = function(action, target) {
             this.moveToTarget(target);
             return OK;
         }
-        if(result !== OK){
+        if(result !== OK && result !== ERR_NOT_IN_RANGE){
             this.handleError(result,action, target);
         }
         return result;
@@ -26,6 +26,29 @@ MyCreep.prototype.performAction = function(action, target) {
     }
 };
 
+/**
+ * handleError is a wrapper for action(target) that also handles moving to the target
+ * list of possible errors:
+ * 
+ *      - OK : 0
+ *      - ERR_NOT_OWNER : -1
+ *      - ERR_NO_PATH : -2
+ *      - ERR_NAME_EXISTS : -3
+ *      - ERR_BUSY : -4
+ *      - ERR_NOT_FOUND : -5
+ *      - ERR_NOT_ENOUGH_RESOURCES : -6
+ *      - ERR_INVALID_TARGET : -7
+ *      - ERR_FULL : -8
+ *      - ERR_NOT_IN_RANGE : -9
+ *      - ERR_INVALID_ARGS : -10
+ *      - ERR_TIRED : -11
+ *      - ERR_NO_BODYPART : -12
+ *      - ERR_RCL_NOT_ENOUGH : -14
+ *      - ERR_GCL_NOT_ENOUGH : -15
+ *      
+ * @param result - the result of the action
+ * @param target - the target object to perform the action on
+ */
 MyCreep.prototype.handleError = function(result, target) {
     switch (result) {
         case ERR_NOT_OWNER:
