@@ -79,15 +79,24 @@ class SpawnController {
         } else {
             this.local_creep_names = this.local_spawn.memory.local_creeps_names;
             if(this.local_creep_names.length === 0) return;
-            // check if the creep is still alive
-            forEach(this.local_creep_names, creepName => {
-                if (!Game.creeps[creepName]) {
-                    // check if the creep is being spawned
-                    if (this.local_spawn.spawning && this.local_spawn.spawning.name === creepName) return;
-                    // remove the creep from the local_creeps_names array
-                    this.local_creep_names.splice(this.local_creep_names.indexOf(creepName), 1);
+            // check if creep is still alive
+            for (let i = 0; i < this.local_creep_names.length; i++) {
+                if (this.local_spawn.memory.spawningCreep === this.local_creep_names[i]) { continue; }
+                if (!Game.creeps[this.local_creep_names[i]]) {
+                    console.log("Creep " + this.local_creep_names[i] + " is dead");
+                    // remove creep from local_creep_names
+                    this.local_creep_names.splice(i, 1);
                 }
-            });
+            }
+            // check if there are any new creeps that are not in local_creep_names
+            for (let creepName in Game.creeps) {
+                if (!this.local_creep_names.includes(creepName)) {
+                    // add creep to local_creep_names
+                    this.local_creep_names.push(creepName);
+                }
+            }
+            // update local_creep_names in memory
+            this.local_spawn.memory.local_creeps_names = this.local_creep_names;
         }
     }
     
@@ -114,11 +123,26 @@ class SpawnController {
             if (creep) {
                 const roleHandler = this.roleHandlers[creep.memory.role];
                 if (roleHandler) {
-                    //console.log(`Running ${creep.name} as ${creep.memory.role}`);
-                    roleHandler(creep);
+                    // check if creep is being spawned
+                    if (this.local_spawn.memory.spawningCreep === creepName) {
+                        console.log(`Waiting for Creep ${creepName} being hatched...`);
+                    }else{
+                        //console.log(`Running ${creep.name} as ${creep.memory.role}`);
+                        roleHandler(creep);
+                    }
                 } else {
+                    //TODO: kill creep and remove from local_creep_names for now
                     console.log(`Unknown role: ${creep.memory.role}`);
-                    creep.say('🤔');
+                    // kill creep
+                    creep.kill();
+                    console.log(`Killed creep ${creep.name}`)
+                    // remove creep from local_creep_names
+                    const creepIndex = this.local_creep_names.indexOf(creepName);
+                    if (creepIndex > -1) {
+                        this.local_creep_names.splice(creepIndex, 1);
+                    }
+                    // update local_creep_names in memory
+                    this.local_spawn.memory.local_creeps_names = this.local_creep_names;
                 }
             } else {
                 console.log(`Creep ${creepName} does not exist yet`);
@@ -136,6 +160,8 @@ class SpawnController {
             return;
         }
         this.spawnQueue = SpawnQueue;
+        
+        
         // Save spawnQueue to memory
         this.local_spawn.memory.spawnQueue = this.spawnQueue;
     }
@@ -143,6 +169,7 @@ class SpawnController {
     processSpawnQueue() {
         try {
             if (!this.local_spawn || this.local_spawn.spawning) return;
+            this.local_spawn.memory.spawningCreep = null;
             if (this.spawnQueue.length > 0) {
                 this.spawnQueue.sort((a, b) => a.priority - b.priority);
                 const creepRole = this.spawnQueue[0].role;

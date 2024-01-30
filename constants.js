@@ -35,6 +35,9 @@ const MINIMUM_MINERS = 0;
 const MINIMUM_SCOUTS = 0;
 const MINIMUM_CLAIMERS = 0;
 
+// Creep dead threshold
+const FRESH_SPAWN_THRESHOLD = 12; // Number of ticks after spawning before creep is considered fresh
+
 // Spawn queue priorities (lower number = higher priority)
 const SPAWN_QUEUE_EMERGENCY_PRIORITY = 0;   // Player-defined emergency creeps
 const SPAWN_QUEUE_CRITICAL_PRIORITY = 1;   // Creeps that are critical to colony survival
@@ -47,6 +50,8 @@ const SPAWN_QUEUE_NO_PRIORITY = 5;   // Creeps that are not critical or importan
 const ENERGY_THRESHOLD_TIER_1 = 300;
 const ENERGY_THRESHOLD_TIER_2 = 500;
 const ENERGY_THRESHOLD_TIER_3 = 800;
+
+const ENERGY_MINIMUM_IN_SPAWN = 200; // Minimum energy in a room before creeps can withdraw energy
 
 // Pathfinding constants
 const PATHFINDING_PLAIN_COST = 2;
@@ -123,6 +128,8 @@ const constants = {
     MINIMUM_SCOUTS,
     MINIMUM_CLAIMERS,
     
+    FRESH_SPAWN_THRESHOLD,
+    
     SPAWN_QUEUE_EMERGENCY_PRIORITY,
     SPAWN_QUEUE_CRITICAL_PRIORITY,
     SPAWN_QUEUE_HIGH_PRIORITY,
@@ -133,6 +140,8 @@ const constants = {
     ENERGY_THRESHOLD_TIER_1,
     ENERGY_THRESHOLD_TIER_2,
     ENERGY_THRESHOLD_TIER_3,
+    
+    ENERGY_MINIMUM_IN_SPAWN,
     
     PATHFINDING_PLAIN_COST,
     PATHFINDING_SWAMP_COST,

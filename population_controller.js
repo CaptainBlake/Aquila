@@ -79,15 +79,15 @@ class PopulationController {
      * Uses constants to determine the minimum number of creeps per role per room.
      */
     setRecruitingPlans() {
+        console.log("==================="+ Game.time +"========================");
         for (let spawnController of this.spawnControllers) {
             let localPopulationTable = new Map(this.globalPopulationMap.get(spawnController.name));
             let spawnQueue = spawnController.spawnQueue;
-            console.log("===========================================");
             for (let role in constants.MINIMUM_ROLES_MAP) {
                 const desiredCount = constants.MINIMUM_ROLES_MAP[role];
                 const currentCount = localPopulationTable.get(role) || 0;
                 let queueCount = spawnQueue.filter(queuedRole => queuedRole.role === role).length;
-                console.log(`role: ${role}, currentCount: ${currentCount}, desiredCount: ${desiredCount}, queueCount: ${queueCount}`);
+                //console.log(`role: ${role}, currentCount: ${currentCount}, desiredCount: ${desiredCount}, queueCount: ${queueCount}`);
                 if (currentCount + queueCount > desiredCount) {
                     while (currentCount + queueCount > desiredCount) {
                         // Find the index of the first element in the queue with the current role

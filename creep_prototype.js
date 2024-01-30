@@ -87,6 +87,7 @@ MyCreep.prototype.handleError = function(result, target) {
     }
 }
 
+//TODO: make this smart
 MyCreep.prototype.moveToTarget = function(target) {
     if (!target || !target.pos) return;
     const result = this.creep.moveTo(target, { visualizePathStyle: { stroke: '#ffaa00' } });
