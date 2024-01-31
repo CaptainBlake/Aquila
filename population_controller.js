@@ -42,9 +42,21 @@ class PopulationController {
         // get all spawns in the game, create a SpawnController for each one, and add it to the spawnControllers array
         for (let spawnName in Game.spawns) {
             let spawn = Game.spawns[spawnName];
-            //console.log("creating spawn controller for: " + spawnName);
-            this.spawnControllers.push(new SpawnController(spawn));
+            // Check if a SpawnController already exists for this spawn
+            if (!this.getSpawnController(spawnName)) {
+                //console.log("creating spawn controller for: " + spawnName);
+                this.spawnControllers.push(new SpawnController(spawn));
+            }
         }
+    }
+
+    /**
+     * Returns the SpawnController for the given spawn name, or null if it doesn't exist.
+     * @param {string} spawnName - The name of the spawn.
+     * @returns {SpawnController|null} - The SpawnController for the given spawn name, or null if it doesn't exist.
+     */
+    getSpawnController(spawnName) {
+        return this.spawnControllers.find(spawnController => spawnController.local_spawn.name === spawnName) || null;
     }
 
     /**
@@ -132,8 +144,22 @@ class PopulationController {
     executeCreepRoles() {
         // Iterate over the spawnControllers array
         for (let spawnController of this.spawnControllers) {
+            // Get the initial CPU usage
+            const initialCpu = Game.cpu.getUsed();
+
             // Call the runLocalCreeps method for the spawnController
             spawnController.runLocalCreeps();
+
+            // Get the final CPU usage
+            const finalCpu = Game.cpu.getUsed();
+
+            // Calculate the CPU usage for running the creeps
+            const cpuUsage = finalCpu - initialCpu;
+
+            // Log the CPU usage along with the room name
+            console.log(`== CPU usage for ${spawnController.local_spawn.room.name}: ${cpuUsage}`);
+            // print out the length of the spawncontroller array
+            //console.log(`spawnControllers length: ${this.spawnControllers.length}`);
         }
     }
 }

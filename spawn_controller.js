@@ -126,17 +126,26 @@ class SpawnController {
                     // check if creep is being spawned
                     if (this.local_spawn.memory.spawningCreep === creepName) {
                         console.log(`Waiting for Creep ${creepName} being hatched...`);
-                    }else{
-                        //console.log(`Running ${creep.name} as ${creep.memory.role}`);
+                    } else {
+                        // Get the initial CPU usage
+                        const initialCpu = Game.cpu.getUsed();
+
+                        // Run the creep
                         roleHandler(creep);
+
+                        // Get the final CPU usage
+                        const finalCpu = Game.cpu.getUsed();
+
+                        // Calculate the CPU usage for running the creep
+                        const cpuUsage = finalCpu - initialCpu;
+
+                        // Log the CPU usage along with the creep name
+                        console.log(`- CPU usage for ${creep.name}: ${cpuUsage}`);
                     }
                 } else {
                     console.log(`No role handler defined for creep ${creepName}`);
                     // kill creep
-                    
                 }
-            } else {
-                console.log(`Creep ${creepName} does not exist yet`);
             }
         });
     }

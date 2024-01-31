@@ -7,6 +7,12 @@ let roleHarvester = {
 
     /** @param {Creep} _creep **/
 
+    
+    //TODO: reiterate this code to a static harvester type 
+    //      (harvesters can be either static or mobile)
+    //      static harvesters will harvest from a source and transfer to a container right next to it
+    // require a container to be built next to the source
+    // require haulers to transfer energy from the container to the spawn -> carrier.js
     run: function(_creep) {
         // == check state == //
         let myCreep = new MyCreep(_creep);

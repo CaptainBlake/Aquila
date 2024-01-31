@@ -47,7 +47,36 @@ let roleBuilder = {
                 }
             } else {
                 console.log(`No construction sites found for creep ${myCreep.creep.name}`);
-                myCreep.creep.say("🤔");
+                // find the closest spawn, extension or tower which is not full and transfer energy to it
+                target = myCreep.creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
+                    filter: (s) => (s.structureType === STRUCTURE_SPAWN
+                            || s.structureType === STRUCTURE_EXTENSION
+                            || s.structureType === STRUCTURE_TOWER)
+                        && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                });
+                if (target) {
+                    myCreep.creep.memory.target = target.id;
+                    const result = myCreep.creep.transfer(target);
+                    switch (result) {
+                        case ERR_NOT_IN_RANGE:
+                            myCreep.moveToTarget(target);
+                            break;
+                        case ERR_FULL:
+                            myCreep.creep.memory.target = null;
+                            break;
+                        case OK:
+                            break;
+                        default:
+                            console.log(`Unknown error for creep ${myCreep.creep.name} and target ${target}: ${result}`);
+                            myCreep.creep.memory.target = null;
+                            break;
+                    }
+                } else {
+                    console.log(`No valid target found for creep ${myCreep.creep.name}`);
+                    myCreep.creep.memory.target = null;
+                    target = null;
+                }
+                
             }
         } else if (myCreep.creep.memory.state === constants.STATES.HARVESTING) {
             // get energy from source

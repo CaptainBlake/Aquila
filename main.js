@@ -46,4 +46,5 @@ const main = function() {
 module.exports.loop = function () {
     console.log("==================="+ Game.time +"========================");
     main();
+    console.log("==== TOTAL AMOUNT OF CPU USED THIS TICK: " + Game.cpu.getUsed());
 };
