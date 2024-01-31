@@ -47,7 +47,7 @@ let roleBuilder = {
                 }
             } else {
                 console.log(`No construction sites found for creep ${myCreep.creep.name}`);
-                myCreep.creep.say("🤔");
+                //myCreep.creep.say("🤔");
             }
         } else if (myCreep.creep.memory.state === constants.STATES.HARVESTING) {
             // get energy from source
@@ -58,7 +58,7 @@ let roleBuilder = {
                 source = myCreep.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
             // if source is a spawn, extension, or container
             if(source && source.structureType) {
-                myCreep.creep.say("🔌")
+                //myCreep.creep.say("🔌")
                 let result = myCreep.creep.withdraw(source, RESOURCE_ENERGY);
                 switch (result) {
                     case ERR_NOT_IN_RANGE:

@@ -22,12 +22,12 @@ let roleMiner = {
         // check if creep is working and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.MINING && myCreep.creep.store.getFreeCapacity() === 0) {
             myCreep.creep.memory.state = constants.STATES.IDLE;
-            myCreep.creep.say('🔄 Idle');
+            //myCreep.creep.say('🔄 Idle');
         }
         // check if creep is idle and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.IDLE && myCreep.creep.store.getUsedCapacity() === 0) {
             myCreep.creep.memory.state = constants.STATES.MINING;
-            myCreep.creep.say('⛏️ Mining');
+            //myCreep.creep.say('⛏️ Mining');
         }
 
         // == perform actions == //
@@ -43,7 +43,7 @@ let roleMiner = {
         // if creep is supposed to be idle
         if (myCreep.creep.memory.state === constants.STATES.IDLE) {
             // wait for energy to be available
-            myCreep.creep.say('⏳ Waiting for energy');
+            //myCreep.creep.say('⏳ Waiting for energy');
         }
     }
 };

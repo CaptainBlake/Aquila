@@ -199,8 +199,14 @@ class SpawnController {
      */
     spawnNewCreep(role) {
         try {
+            // Check if the counter exists in the memory
+            if (!Memory.workerCounter) {
+                Memory.workerCounter = 1;
+            }
+
+            // Use the counter to generate the worker's name
             const body = this.getBodyPartsForRole(role);
-            const creepName = `${role}_${Game.time}`;
+            const creepName = `worker_${Memory.workerCounter}`;
             const result = this.local_spawn.spawnCreep(body, creepName, {
                 memory: {
                     role: role,
@@ -216,6 +222,7 @@ class SpawnController {
                 //console.log(`Spawning new creep: ${creepName}`);
                 Game.creeps[creepName].memory.role = role;
                 this.local_creep_names.push(creepName);
+                Memory.workerCounter++;
                 return creepName;
             } else {
                 console.log(`Error spawning creep: ${result}`);

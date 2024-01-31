@@ -56,7 +56,7 @@ let roleUpgrader = {
             }else{
                 // if source is a spawn, extension, or container
                 if(source.structureType) {
-                    myCreep.creep.say("🔌")
+                    //myCreep.creep.say("🔌")
                     let result = myCreep.creep.withdraw(source, RESOURCE_ENERGY);
                     if (result === ERR_NOT_IN_RANGE) {
                         myCreep.creep.moveTo(source);
@@ -66,7 +66,7 @@ let roleUpgrader = {
                     }
                 }else if(source instanceof Source) {
                     // if source is a source
-                    myCreep.creep.say("🔄")
+                    //myCreep.creep.say("🔄")
                     myCreep.creep.harvestEnergy(source);
                 }
             }

@@ -45,5 +45,7 @@ const main = function() {
 
 module.exports.loop = function () {
     console.log("==================="+ Game.time +"========================");
+    console.log("used CPU bucket before main-call: " + Game.cpu.getUsed());
     main();
+    console.log("used CPU bucket after main-call: " + Game.cpu.getUsed());
 };

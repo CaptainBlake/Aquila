@@ -22,12 +22,12 @@ let roleCarrier = {
         // check if creep is working and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.WORKING && myCreep.creep.store.getFreeCapacity() === 0) {
             myCreep.creep.memory.state = constants.STATES.IDLE;
-            myCreep.creep.say('🔄 Idle');
+            //myCreep.creep.say('🔄 Idle');
         }
         // check if creep is idle and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.IDLE && myCreep.creep.store.getUsedCapacity() === 0) {
             myCreep.creep.memory.state = constants.STATES.WORKING;
-            myCreep.creep.say('🚚 Carrying');
+            //myCreep.creep.say('🚚 Carrying');
         }
 
         // == perform actions == //
@@ -51,7 +51,7 @@ let roleCarrier = {
         // if creep is supposed to be idle
         if (myCreep.creep.memory.state === constants.STATES.IDLE) {
             // wait for energy to be available
-            myCreep.creep.say('⏳ Waiting for energy');
+            //myCreep.creep.say('⏳ Waiting for energy');
         }
     }
 };

@@ -23,12 +23,12 @@ let roleHarvester = {
         // check if creep is working and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.HARVESTING && myCreep.creep.store.getFreeCapacity() === 0) {
             myCreep.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.WORKING);
-            myCreep.creep.say('🚧 Working');
+            //myCreep.creep.say('🚧 Working');
         }
         // check if creep is harvesting and needs to switch state
         if (myCreep.creep.memory.state === constants.STATES.WORKING && myCreep.creep.store.getUsedCapacity() === 0) {
             myCreep.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.HARVESTING);
-            myCreep.creep.say('🔄 Harvesting');
+            //myCreep.creep.say('🔄 Harvesting');
         }
 
         // == perform actions == //
