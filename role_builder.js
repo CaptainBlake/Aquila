@@ -31,9 +31,11 @@ let roleBuilder = {
         if (myCreep.creep.memory.state === constants.STATES.BUILDING) {
             // build stuff
             let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : myCreep.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
+            //console.log(`Creep ${myCreep.creep.name} is building ${target}`);
             if (target) {
                 if (target.progress === target.progressTotal) {
                     // find closest construction site
+                    //console.log(`Construction site ${target} is complete`);
                     target = myCreep.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
                     if (target) {
                         myCreep.creep.memory.target = target.id;
@@ -43,6 +45,7 @@ let roleBuilder = {
 
                     }
                 } else {
+                    console.log(`Building ${target}`)
                     myCreep.buildStructure(target);
                 }
             } else {

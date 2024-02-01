@@ -9,6 +9,10 @@ class GameStateController {
     updateGameState() {
         
     }
+    
+    // jede source [] -> {worker2} <--- populationController [lebende creeps]
+    
+    
 }
 
 module.exports = GameStateController;

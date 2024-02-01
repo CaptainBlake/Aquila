@@ -7,66 +7,57 @@ let roleHarvester = {
 
     /** @param {Creep} _creep **/
 
-    
-    //TODO: reiterate this code to a static harvester type 
-    //      (harvesters can be either static or mobile)
-    //      static harvesters will harvest from a source and transfer to a container right next to it
-    // require a container to be built next to the source
-    // require haulers to transfer energy from the container to the spawn -> carrier.js
+
     run: function(_creep) {
-        // == check state == //
         let myCreep = new MyCreep(_creep);
-        // if creep is spawning, return
+
+        // State machine
+        
         if (myCreep.creep.spawning){
             console.log(`Creep ${myCreep.creep.name} is spawning...`);
             return;
         }
-        // after spawning, set state to harvesting
+
         if (myCreep.creep.memory.state === constants.STATES.INITIALIZING) {
             console.log("...done spawning");
             myCreep.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.HARVESTING);
         }
-        // check if creep is working and needs to switch state
+
         if (myCreep.creep.memory.state === constants.STATES.HARVESTING && myCreep.creep.store.getFreeCapacity() === 0) {
             myCreep.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.WORKING);
+            myCreep.updateMemoryAttribute(constants.ATTRIBUTES.TARGET, null);
             myCreep.creep.say('🚧 Working');
         }
-        // check if creep is harvesting and needs to switch state
+
         if (myCreep.creep.memory.state === constants.STATES.WORKING && myCreep.creep.store.getUsedCapacity() === 0) {
             myCreep.updateMemoryAttribute(constants.ATTRIBUTES.STATE, constants.STATES.HARVESTING);
+            myCreep.updateMemoryAttribute(constants.ATTRIBUTES.TARGET, null);
             myCreep.creep.say('🔄 Harvesting');
         }
 
-        // == perform actions == //
-
-        // if creep is supposed to be harvesting
+        // Perform actions based on state
+        
         if (myCreep.creep.memory.state === constants.STATES.HARVESTING) {
             let source = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null;
             if (!source || source.energy === 0) {
-                // find closest source
                 source = myCreep.creep.pos.findClosestByPath(FIND_SOURCES_ACTIVE);
                 myCreep.creep.memory.target = source.id;
             }
             myCreep.harvestEnergy(source);
         }
 
-        // if creep is supposed to be working
         if (myCreep.creep.memory.state === constants.STATES.WORKING) {
-            // find closest spawn, extension or tower which is not full
-            let target = myCreep.creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-                filter: (s) => (s.structureType === STRUCTURE_SPAWN
-                        || s.structureType === STRUCTURE_EXTENSION
-                        || s.structureType === STRUCTURE_TOWER)
-                    && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-            });
-            // If no target is found, return early
-            if (!target) {
-                console.log("No suitable target found for creep " + myCreep.creep.name);
-                return;
+            let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null;
+            // if target is null, find a target
+            if(!target){
+                // find closest container, spawn, or extension
+                target = myCreep.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                });
             }
-            // transfer energy to the target
-            if (myCreep.creep.transfer(target, RESOURCE_ENERGY) === ERR_NOT_IN_RANGE) {
-                myCreep.creep.moveTo(target, { visualizePathStyle: { stroke: '#ffffff' } });
+            const result = myCreep.creep.transfer(target, RESOURCE_ENERGY);
+            if(result === ERR_NOT_IN_RANGE) {
+                myCreep.creep.moveTo(target, {visualizePathStyle: {stroke: '#ffffff'}});
             }
         }
     }

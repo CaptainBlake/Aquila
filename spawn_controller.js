@@ -48,6 +48,7 @@ class SpawnController {
                 [constants.CREEP_ROLE_MINER]: roleMiner.run,
                 [constants.CREEP_ROLE_SCOUT]: roleScout.run,
                 [constants.CREEP_ROLE_CLAIMER]: roleClaimer.run,
+                [constants.CREEP_ROLE_DEFENDER]: roleDefender.run,
                 // Add new roles here
             };
             
