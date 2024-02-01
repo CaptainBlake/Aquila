@@ -126,7 +126,6 @@ MyCreep.prototype.handleError = function(result, target) {
  * If the creep is stuck (hasn't moved for a certain number of ticks), it forces an update of the path.
  *
  * TODO: still dumb as sh*t.
- * - if the creep is stuck, it will try to move to the same position over and over again
  * - not multi-room compatible
  * 
  * @param {Object} target - The target object to move to.
@@ -134,39 +133,28 @@ MyCreep.prototype.handleError = function(result, target) {
  */ 
 
 MyCreep.prototype.moveToTarget = function(target) {
+    // check if target is valid
     if (!target) {
         console.log('Target is undefined');
         return ERR_NOT_FOUND;
     }
-    // Check if the creep is stuck
-    if (this.creep.memory.lastPosition && this.creep.pos.isEqualTo(this.creep.memory.lastPosition)) { 
-        // Change this value to adjust the number of ticks
-        // The creep is stuck, force an update of the path
-        this.creep.say('Stuck')
-        this.creep.memory.path = null;
-    }
-
     let path = this.creep.memory.path;
+    // check if path is valid
     if (!path) {
         this.creep.say('New path')
         let costs = this.createCostMatrix(this.creep.room.name);
         path = this.creep.pos.findPathTo(target, { costCallback: function() { return costs; } });
         this.creep.memory.path = path;
     }
-
     let result = this.creep.moveByPath(path);
+    // check if path is movable
     if (result === ERR_NOT_FOUND || result === ERR_NO_PATH) {
         this.creep.say('No path')
-        // Path is blocked or doesn't exist, update the cost matrix
-        let costs = this.createCostMatrix(this.creep.room.name);
-        path = this.creep.pos.findPathTo(target, { costCallback: function() { return costs; } });
-        this.creep.memory.path = path;
-        result = this.creep.moveByPath(path);
+        this.creep.memory.path = null;
     }
-
-    if (result === OK && this.creep.pos.isEqualTo(target.pos)) {
-        // Target reached, clear the path
-        this.creep.say('Reached target')
+    // check if creep is stuck
+    if(this.compareCurrentPosition(this.creep.memory.lastPosition)){
+        this.creep.say('Stuck')
         this.creep.memory.path = null;
     }
     
@@ -174,10 +162,14 @@ MyCreep.prototype.moveToTarget = function(target) {
     this.creep.memory.lastMoveTime = Game.time;
     this.creep.memory.lastPosition = this.creep.pos;
     
-    this.creep.say("🚚")
     // Return the result of the move action
     return result;
 };
+
+MyCreep.prototype.compareCurrentPosition = function(position) {
+    // manually compare last position to current position
+    return position.x === this.creep.pos.x && position.y === this.creep.pos.y && position.roomName === this.creep.pos.roomName;
+}
 
 MyCreep.prototype.createCostMatrix = function(roomName) {
     let room = Game.rooms[roomName];
@@ -217,13 +209,11 @@ MyCreep.prototype.transferEnergy = function(target) {
     this.performAction(this.creep.transfer.bind(this.creep, RESOURCE_ENERGY), target);
 };
 
+MyCreep.prototype.withdrawEnergy = function(target) {
+    this.performAction(this.creep.withdraw.bind(this.creep, RESOURCE_ENERGY), target);
+}
+
 MyCreep.prototype.buildStructure = function(target) {
-    if (this.creep.store.getUsedCapacity() === 0){
-        this.creep.memory.target = null;
-        this.creep.memory.path = null;
-        console.log("Creep has no energy")
-        return;
-    }
     this.performAction(this.creep.build.bind(this.creep), target);
 };
 
@@ -244,10 +234,7 @@ MyCreep.prototype.attackHostileStructures = function() {
 };
 
 MyCreep.prototype.repairStructure = function(target) {
-    if (this.creep.store.getUsedCapacity() === 0) return;
     this.performAction(this.creep.repair.bind(this.creep), target);
 };
-
-
 
 module.exports = MyCreep;

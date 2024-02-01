@@ -49,35 +49,17 @@ let roleBuilder = {
                     myCreep.buildStructure(target);
                 }
             } else {
-                console.log(`No construction sites found for creep ${myCreep.creep.name}`);
+                //console.log(`No construction sites found for creep ${myCreep.creep.name}`);
                 // find the closest spawn, extension or tower which is not full and transfer energy to it
-                target = myCreep.creep.pos.findClosestByPath(FIND_MY_STRUCTURES, {
-                    filter: (s) => (s.structureType === STRUCTURE_SPAWN
-                            || s.structureType === STRUCTURE_EXTENSION
-                            || s.structureType === STRUCTURE_TOWER)
-                        && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
+                target = myCreep.creep.pos.findClosestByPath(FIND_STRUCTURES, {
+                    filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
                 });
                 if (target) {
                     myCreep.creep.memory.target = target.id;
-                    const result = myCreep.creep.transfer(target);
-                    switch (result) {
-                        case ERR_NOT_IN_RANGE:
-                            myCreep.moveToTarget(target);
-                            break;
-                        case ERR_FULL:
-                            myCreep.creep.memory.target = null;
-                            break;
-                        case OK:
-                            break;
-                        default:
-                            console.log(`Unknown error for creep ${myCreep.creep.name} and target ${target}: ${result}`);
-                            myCreep.creep.memory.target = null;
-                            break;
-                    }
                 } else {
-                    console.log(`No valid target found for creep ${myCreep.creep.name}`);
+                    console.log(`No targets found for creep ${myCreep.creep.name}`);
                     myCreep.creep.memory.target = null;
-                    target = null;
+                    myCreep.creep.say("😴");
                 }
                 
             }
@@ -91,10 +73,11 @@ let roleBuilder = {
             // if source is a spawn, extension, or container
             if(source && source.structureType) {
                 myCreep.creep.say("🔌")
+                //TODO: pathfindingAPI --> use withdrawEnergy()
                 let result = myCreep.creep.withdraw(source, RESOURCE_ENERGY);
                 switch (result) {
                     case ERR_NOT_IN_RANGE:
-                        myCreep.moveToTarget(source);
+                        myCreep.creep.moveTo(source); 
                         break;
                     case ERR_NOT_ENOUGH_RESOURCES:
                         myCreep.creep.memory.target = null;
