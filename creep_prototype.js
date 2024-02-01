@@ -201,40 +201,67 @@ MyCreep.prototype.updateMemoryAttribute = function(key, value) {
     this.creep.memory[key] = value;
 };
 
+/**
+ * 
+ * @param source {Source} - the source to harvest energy from
+ * @returns {*} - the result of the harvest action
+ */
 MyCreep.prototype.harvestEnergy = function(source) {
     return this.performAction(this.creep.harvest.bind(this.creep), source);
 };
 
+/**
+ * 
+ * @param target {Structure} - the target to transfer energy to
+ * @returns {*} - the result of the transfer action
+ */
 MyCreep.prototype.transferEnergy = function(target) {
-    this.performAction(this.creep.transfer.bind(this.creep, RESOURCE_ENERGY), target);
+    return this.performAction(this.creep.transfer.bind(this.creep, RESOURCE_ENERGY), target);
 };
 
+/**
+ * 
+ * @param target {Structure} - the target to withdraw energy from
+ * @returns {*} - the result of the withdraw action
+ */
 MyCreep.prototype.withdrawEnergy = function(target) {
-    this.performAction(this.creep.withdraw.bind(this.creep, RESOURCE_ENERGY), target);
+    return this.performAction(this.creep.withdraw.bind(this.creep, RESOURCE_ENERGY), target);
 }
 
+/**
+ * 
+ * @param target {ConstructionSite} - the target to build
+ * @returns {*} - the result of the build action
+ */
 MyCreep.prototype.buildStructure = function(target) {
-    this.performAction(this.creep.build.bind(this.creep), target);
+    return this.performAction(this.creep.build.bind(this.creep), target);
 };
 
+/**
+ * 
+ * @param target {Room.controller} - the target to upgrade
+ * @returns {*}
+ */
 MyCreep.prototype.upgradeController = function(target) {
-    this.performAction(this.creep.upgradeController.bind(this.creep), target);
+    return this.performAction(this.creep.upgradeController.bind(this.creep), target);
 }
 
 MyCreep.prototype.attackHostileCreeps = function() {
     const hostileCreeps = this.creep.room.find(FIND_HOSTILE_CREEPS);
     if (hostileCreeps.length > 0)
-        this.performAction(this.creep.attack.bind(this.creep), hostileCreeps[0]);
+        return this.performAction(this.creep.attack.bind(this.creep), hostileCreeps[0]);
+    return ERR_NOT_FOUND;
 };
 
 MyCreep.prototype.attackHostileStructures = function() {
     const hostileStructures = this.creep.room.find(FIND_HOSTILE_STRUCTURES);
     if (hostileStructures.length > 0)
-        this.performAction(this.creep.attack.bind(this.creep), hostileStructures[0]);
+        return this.performAction(this.creep.attack.bind(this.creep), hostileStructures[0]);
+    return ERR_NOT_FOUND;
 };
 
 MyCreep.prototype.repairStructure = function(target) {
-    this.performAction(this.creep.repair.bind(this.creep), target);
+    return this.performAction(this.creep.repair.bind(this.creep), target);
 };
 
 module.exports = MyCreep;
