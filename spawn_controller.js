@@ -172,7 +172,9 @@ class SpawnController {
             if (!this.local_spawn || this.local_spawn.spawning) return;
             this.local_spawn.memory.spawningCreep = null;
             if (this.spawnQueue.length > 0) {
+                // sort the queue by priority (smaller number = higher priority)
                 this.spawnQueue.sort((a, b) => a.priority - b.priority);
+                //this.spawnQueue.sort((a, b) => a.priority - b.priority);
                 const creepRole = this.spawnQueue[0].role;
                 if (this.isSpawnable(creepRole)) {
                     const creepName = this.spawnNewCreep(creepRole);

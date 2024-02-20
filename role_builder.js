@@ -30,38 +30,25 @@ let roleBuilder = {
         // Perform actions based on state
         if (myCreep.creep.memory.state === constants.STATES.BUILDING) {
             // build stuff
-            let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : myCreep.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
-            //console.log(`Creep ${myCreep.creep.name} is building ${target}`);
+            // Use first construction site from room memory, or use the one stored in the creep's memory
+            let target = myCreep.creep.memory.target ? Game.getObjectById(myCreep.creep.memory.target) : null; 
+            // console.log(`Creep ${myCreep.creep.name} is building ${target}`);
             if (target) {
-                if (target.progress === target.progressTotal) {
-                    // find closest construction site
-                    //console.log(`Construction site ${target} is complete`);
-                    target = myCreep.creep.pos.findClosestByPath(FIND_CONSTRUCTION_SITES);
-                    if (target) {
-                        myCreep.creep.memory.target = target.id;
-                    } else {
-                        console.log(`No new construction sites found for creep ${myCreep.creep.name}`);
-                        myCreep.creep.memory.target = null;
-
-                    }
+                if (!(target instanceof ConstructionSite)) {
+                    console.log(`Target is not a construction site: ${target}` + target.name)
+                    target = null;
+                    myCreep.creep.memory.target = null;
                 } else {
                     console.log(`Building ${target}`)
                     myCreep.buildStructure(target);
                 }
-            } else {
-                //console.log(`No construction sites found for creep ${myCreep.creep.name}`);
-                // find the closest spawn, extension or tower which is not full and transfer energy to it
-                target = myCreep.creep.pos.findClosestByPath(FIND_STRUCTURES, {
-                    filter: (s) => (s.structureType === STRUCTURE_CONTAINER || s.structureType === STRUCTURE_EXTENSION || s.structureType === STRUCTURE_SPAWN) && s.store.getFreeCapacity(RESOURCE_ENERGY) > 0
-                });
-                if (target) {
-                    myCreep.creep.memory.target = target.id;
-                } else {
-                    console.log(`No targets found for creep ${myCreep.creep.name}`);
-                    myCreep.creep.memory.target = null;
-                    myCreep.creep.say("😴");
+            }else{
+                console.log("get new construction site")
+                let constructionSites = myCreep.creep.room.memory.constructionSites;
+                if (constructionSites && constructionSites.length > 0) {
+                    myCreep.creep.memory.target = constructionSites[0].id;
+                    console.log(`Creep ${myCreep.creep.name} is building ${constructionSites[0].type}`);
                 }
-                
             }
         } else if (myCreep.creep.memory.state === constants.STATES.HARVESTING) {
             // get energy from source

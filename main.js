@@ -28,9 +28,9 @@ Happy coding and conquering the Screeps world with Aquila!
 */
 'use strict';
 // Controller
-const globalGameStateController = require('global_game_state_controller');
+const gameStateController = require('./game_state_controller');
 const populationController = require('./population_controller');
-const buildController = require('./build_controller');
+
 
 // initialize singleton controllers
 
@@ -39,9 +39,7 @@ const main = function() {
     // run population controller
     populationController.taskLoop();
     // run global game state controller
-    globalGameStateController.taskLoop();
-    // run build controller
-    buildController.taskLoop();
+    gameStateController.taskLoop();  
     
 }
 

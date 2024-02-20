@@ -1,5 +1,7 @@
 ﻿// constants.js
 
+// -- creeps -- //
+
 // Creep roles
 const CREEP_ROLE_HARVESTER = 'harvester';  // Creeps that harvest energy and deliver it to structures
 const CREEP_ROLE_BUILDER = 'builder';  // Creeps that build structures
@@ -25,10 +27,10 @@ const CREEP_ROLES = [
 ];
 
 // Minimum number of creeps per role per room 
-const MINIMUM_HARVESTERS = 2;
-const MINIMUM_BUILDERS = 1;
+const MINIMUM_HARVESTERS = 3;
+const MINIMUM_BUILDERS = 2;
 const MINIMUM_DEFENDERS = 0;
-const MINIMUM_UPGRADERS = 1;
+const MINIMUM_UPGRADERS = 2;
 const MINIMUM_REPAIRERS = 0;
 const MINIMUM_CARRIERS = 0;
 const MINIMUM_MINERS = 0;
@@ -38,6 +40,24 @@ const MINIMUM_CLAIMERS = 0;
 // Creep dead threshold
 const FRESH_SPAWN_THRESHOLD = 12; // Number of ticks after spawning before creep is considered fresh
 
+// -- energy -- //
+
+// Energy thresholds
+const ENERGY_THRESHOLD_TIER_1 = 300;
+const ENERGY_THRESHOLD_TIER_2 = 500;
+const ENERGY_THRESHOLD_TIER_3 = 800;
+// Minimum energy in a room before creeps can withdraw energy
+const ENERGY_MINIMUM_IN_SPAWN = 200; 
+
+// -- pathfinding -- //
+
+// Pathfinding constants
+const PATHFINDING_IGNORE_CREEPS = true;
+const PATHFINDING_PLAIN_COST = 2;
+const PATHFINDING_SWAMP_COST = 10;
+
+// -- queue priorities -- //
+
 // Spawn queue priorities (lower number = higher priority)
 const SPAWN_QUEUE_EMERGENCY_PRIORITY = 0;   // Player-defined emergency creeps
 const SPAWN_QUEUE_CRITICAL_PRIORITY = 1;   // Creeps that are critical to colony survival
@@ -45,21 +65,28 @@ const SPAWN_QUEUE_HIGH_PRIORITY = 2;   // Creeps that are critical to colony sur
 const SPAWN_QUEUE_MEDIUM_PRIORITY = 3   // Creeps that are important but not critical   
 const SPAWN_QUEUE_LOW_PRIORITY = 4;   // Creeps that are not critical or important
 const SPAWN_QUEUE_NO_PRIORITY = 5;   // Creeps that are not critical or important
+// Building priorities
+const BUILD_QUEUE_EMERGENCY_PRIORITY = 0;
+const BUILD_QUEUE_CRITICAL_PRIORITY = 1;
+const BUILD_QUEUE_HIGH_PRIORITY = 2;
+const BUILD_QUEUE_MEDIUM_PRIORITY = 3;
+const BUILD_QUEUE_LOW_PRIORITY = 4;
+const BUILD_QUEUE_NO_PRIORITY = 5;
+// Repair priorities
+const REPAIR_QUEUE_EMERGENCY_PRIORITY = 0;
+const REPAIR_QUEUE_CRITICAL_PRIORITY = 1;
+const REPAIR_QUEUE_HIGH_PRIORITY = 2;
+const REPAIR_QUEUE_MEDIUM_PRIORITY = 3;
+const REPAIR_QUEUE_LOW_PRIORITY = 4;
+const REPAIR_QUEUE_NO_PRIORITY = 5;
 
-// Energy thresholds
-const ENERGY_THRESHOLD_TIER_1 = 300;
-const ENERGY_THRESHOLD_TIER_2 = 500;
-const ENERGY_THRESHOLD_TIER_3 = 800;
+// -- Buildings -- //
 
-const ENERGY_MINIMUM_IN_SPAWN = 200; // Minimum energy in a room before creeps can withdraw energy
-
-// Pathfinding constants
-const PATHFINDING_IGNORE_CREEPS = true;
-const PATHFINDING_PLAIN_COST = 2;
-const PATHFINDING_SWAMP_COST = 10;
+// Minimum number of construction sites per room
+const MINIMUM_CONSTRUCTION_SITES = 5;
 
 
-// Maps
+// -- maps -- //
 
 // Map of creep roles to minimum number of creeps per role per room
 const MINIMUM_ROLES_MAP = {
@@ -106,8 +133,30 @@ const ATTRIBUTES = {
     LAST_POSITION: 'lastPosition',
 };
 
+const BUILDING_PRIORITIES = {
+    [STRUCTURE_SPAWN]: 1,
+    [STRUCTURE_EXTENSION]: 2,
+    [STRUCTURE_TOWER]: 2,
+    [STRUCTURE_STORAGE]: 3,
+    [STRUCTURE_CONTAINER]: 3,
+    [STRUCTURE_ROAD]: 4,
+    [STRUCTURE_WALL]: 4,
+    [STRUCTURE_RAMPART]: 4,
+    [STRUCTURE_LINK]: 3,
+    [STRUCTURE_OBSERVER]: 3,
+    [STRUCTURE_POWER_BANK]: 3,
+    [STRUCTURE_POWER_SPAWN]: 3,
+    [STRUCTURE_EXTRACTOR]: 2,
+    [STRUCTURE_LAB]: 2,
+    [STRUCTURE_TERMINAL]: 2,
+    [STRUCTURE_NUKER]: 2,
+    [STRUCTURE_FACTORY]: 2,
+};
+    
+
 // Exported constants object
 const constants = {
+    // Creep roles
     CREEP_ROLE_HARVESTER,
     CREEP_ROLE_BUILDER,
     CREEP_ROLE_DEFENDER,
@@ -117,9 +166,9 @@ const constants = {
     CREEP_ROLE_MINER,
     CREEP_ROLE_SCOUT,
     CREEP_ROLE_CLAIMER,
-    
+    // Creep roles as an array
     CREEP_ROLES,
-    
+    // Minimum number of creeps per role per room
     MINIMUM_HARVESTERS,
     MINIMUM_BUILDERS,
     MINIMUM_DEFENDERS,
@@ -129,28 +178,46 @@ const constants = {
     MINIMUM_MINERS,
     MINIMUM_SCOUTS,
     MINIMUM_CLAIMERS,
-    
+    // Creep dead threshold
     FRESH_SPAWN_THRESHOLD,
-    
+    // Spawn queue priorities
     SPAWN_QUEUE_EMERGENCY_PRIORITY,
     SPAWN_QUEUE_CRITICAL_PRIORITY,
     SPAWN_QUEUE_HIGH_PRIORITY,
     SPAWN_QUEUE_MEDIUM_PRIORITY,
     SPAWN_QUEUE_LOW_PRIORITY,
     SPAWN_QUEUE_NO_PRIORITY,
-    
+    // Energy thresholds
     ENERGY_THRESHOLD_TIER_1,
     ENERGY_THRESHOLD_TIER_2,
     ENERGY_THRESHOLD_TIER_3,
-    
+    // Energy thresholds
     ENERGY_MINIMUM_IN_SPAWN,
-    
+    // Pathfinding constants
+    PATHFINDING_IGNORE_CREEPS,
     PATHFINDING_PLAIN_COST,
     PATHFINDING_SWAMP_COST,
-    
+    // Building priorities
+    BUILD_QUEUE_EMERGENCY_PRIORITY,
+    BUILD_QUEUE_CRITICAL_PRIORITY,
+    BUILD_QUEUE_HIGH_PRIORITY,
+    BUILD_QUEUE_MEDIUM_PRIORITY,
+    BUILD_QUEUE_LOW_PRIORITY,
+    BUILD_QUEUE_NO_PRIORITY,
+    // Repair priorities
+    REPAIR_QUEUE_EMERGENCY_PRIORITY,
+    REPAIR_QUEUE_CRITICAL_PRIORITY,
+    REPAIR_QUEUE_HIGH_PRIORITY,
+    REPAIR_QUEUE_MEDIUM_PRIORITY,
+    REPAIR_QUEUE_LOW_PRIORITY,
+    REPAIR_QUEUE_NO_PRIORITY,
+    // Minimum number of construction sites per room
+    MINIMUM_CONSTRUCTION_SITES,
+    // Maps
     MINIMUM_ROLES_MAP,
     STATES,
-    ATTRIBUTES
+    ATTRIBUTES,
+    BUILDING_PRIORITIES,
 };
 
 module.exports = constants;
